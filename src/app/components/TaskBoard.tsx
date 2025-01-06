@@ -11,12 +11,12 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/app/components/ui/button';
 import { Plus, CheckCircle } from 'lucide-react';
-import { TaskItem } from '@/components/TaskItem';
-import { TaskColumn } from '@/components/TaskColumn';
-import TaskModal from '@/components/TaskModal';
-import { useTask } from '@/contexts/TaskContext';
+import { TaskItem } from '@/app/components/TaskItem';
+import { TaskColumn } from '@/app/components/TaskColumn';
+import TaskModal from '@/app/components/TaskModal';
+import { useTask } from '@/app/contexts/TaskContext';
 
 interface TaskBoardProps {
   selectedProjectId: string | null;

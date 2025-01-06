@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import LeftSidebar from '@/components/LeftSidebar';
-import RightSidebar from '@/components/RightSidebar';
-import { ProjectProvider, useProject } from '@/contexts/ProjectContext';
-import { TaskProvider, useTask } from '@/contexts/TaskContext';
+import LeftSidebar from '@/app/components/LeftSidebar';
+import RightSidebar from '@/app/components/RightSidebar';
+import { ProjectProvider, useProject } from '@/app/contexts/ProjectContext';
+import { TaskProvider, useTask } from '@/app/contexts/TaskContext';
 
 function ApplicationContent({ children }: { children: React.ReactNode }) {
   const { projects, selectedProjectId, selectProject, addProject } = useProject();

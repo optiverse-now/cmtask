@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
-import { ProjectStatus } from '@/components/LeftSidebar';
+import { ProjectStatus } from '@/app/components/LeftSidebar';
 
 interface Project {
   id: string;
