@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { ProjectStatus } from '@/app/components/Organisms/Sidebar/LeftSidebar';
+import { Task } from '@/app/types/task';
 
 interface Project {
   id: string;
@@ -21,6 +22,7 @@ interface ProjectContextType {
   selectProject: (id: string) => void;
   completeProject: (id: string) => void;
   getSelectedProject: () => Project | undefined;
+  updateProjectStatus: (projectId: string, tasks: { [key: string]: Task }) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -77,6 +79,35 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return projects.find((project) => project.id === selectedProjectId);
   };
 
+  const updateProjectStatus = (projectId: string, tasks: { [key: string]: Task }) => {
+    const projectTasks = Object.values(tasks).filter(task => task.projectId === projectId);
+    
+    if (projectTasks.length === 0) {
+      setProjects(projects.map(project =>
+        project.id === projectId
+          ? { ...project, status: '未着手', updatedAt: new Date().toISOString() }
+          : project
+      ));
+      return;
+    }
+
+    const hasInProgressOrCompletedTasks = projectTasks.some(task => 
+      task.status === '進行中' || task.status === '完了'
+    );
+
+    const allTasksNotStarted = projectTasks.every(task => task.status === '未着手');
+
+    setProjects(projects.map(project =>
+      project.id === projectId
+        ? {
+            ...project,
+            status: hasInProgressOrCompletedTasks ? '進行中' : (allTasksNotStarted ? '未着手' : project.status),
+            updatedAt: new Date().toISOString()
+          }
+        : project
+    ));
+  };
+
   return (
     <ProjectContext.Provider
       value={{
@@ -88,6 +119,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         selectProject,
         completeProject,
         getSelectedProject,
+        updateProjectStatus,
       }}
     >
       {children}

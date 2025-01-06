@@ -11,6 +11,7 @@ import {
   TASK_STATUSES,
   TASK_PRIORITIES
 } from '@/app/types/task';
+import { useProject } from './ProjectContext';
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
@@ -35,6 +36,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   });
   const [columnOrder] = useState(['未着手', '進行中', '完了']);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const { updateProjectStatus } = useProject();
 
   const addTask = (
     projectId: string,
@@ -84,6 +86,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         taskIds: [...columns[status].taskIds, newTaskId],
       },
     });
+
+    updateProjectStatus(projectId, { ...tasks, [newTaskId]: newTask });
   };
 
   const updateTask = (
@@ -145,6 +149,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     if (selectedTaskId === id) {
       setSelectedTaskId(null);
     }
+
+    updateProjectStatus(deletedTask.projectId, remainingTasks);
   };
 
   const selectTask = (id: string | null) => {
@@ -156,6 +162,16 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     targetColumnId: string,
     sourceColumnId: string
   ) => {
+    const updatedTasks = {
+      ...tasks,
+      [activeId]: {
+        ...tasks[activeId],
+        status: targetColumnId as TaskStatus,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setTasks(updatedTasks);
     setColumns({
       ...columns,
       [sourceColumnId]: {
@@ -168,14 +184,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       },
     });
 
-    setTasks({
-      ...tasks,
-      [activeId]: {
-        ...tasks[activeId],
-        status: targetColumnId as '未着手' | '進行中' | '完了',
-        updatedAt: new Date().toISOString(),
-      },
-    });
+    updateProjectStatus(updatedTasks[activeId].projectId, updatedTasks);
   };
 
   const reorderTasksInColumn = (
