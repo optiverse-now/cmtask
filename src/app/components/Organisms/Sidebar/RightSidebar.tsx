@@ -27,7 +27,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           <h2 className="text-lg font-semibold">AIチャット</h2>
         </div>
         <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-          タスクを選択してください
+          
         </div>
       </div>
     );
