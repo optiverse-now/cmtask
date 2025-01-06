@@ -1,16 +1,42 @@
-import { Metadata } from "next";
+'use client';
 
-export const metadata: Metadata = {
-  title: "applications",
-  description: "applications",
-};
+import React from 'react';
+import LeftSidebar from '@/components/LeftSidebar';
+import RightSidebar from '@/components/RightSidebar';
+import { ProjectProvider, useProject } from '@/contexts/ProjectContext';
+import { TaskProvider, useTask } from '@/contexts/TaskContext';
 
-export default function ApplicationsLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+function ApplicationContent({ children }: { children: React.ReactNode }) {
+  const { projects, selectedProjectId, selectProject, addProject } = useProject();
+  const { tasks, selectedTaskId, selectTask } = useTask();
+
   return (
-    <div>
-      {children}
+    <div className="flex h-screen">
+      <LeftSidebar
+        projects={projects}
+        selectedProjectId={selectedProjectId}
+        onProjectSelect={selectProject}
+        onAddProject={addProject}
+      />
+      <main className="flex-1 overflow-auto">{children}</main>
+      <RightSidebar
+        selectedTask={selectedTaskId ? tasks[selectedTaskId] : null}
+        onEditTask={selectTask}
+      />
     </div>
+  );
+}
+
+export default function ApplicationLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ProjectProvider>
+      <TaskProvider>
+        <ApplicationContent>{children}</ApplicationContent>
+      </TaskProvider>
+    </ProjectProvider>
   );
 }
