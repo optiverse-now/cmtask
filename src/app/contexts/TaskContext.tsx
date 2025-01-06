@@ -2,58 +2,15 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { DragEndEvent } from '@dnd-kit/core';
-
-export type TaskStatus = '未着手' | '進行中' | '完了';
-export type TaskPriority = '低' | '中' | '高';
-
-export const TASK_STATUSES: TaskStatus[] = ['未着手', '進行中', '完了'];
-export const TASK_PRIORITIES: TaskPriority[] = ['低', '中', '高'];
-
-interface Task {
-  id: string;
-  projectId: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  assignee: string;
-  dueDate: string;
-  priority: TaskPriority;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Column {
-  id: string;
-  title: string;
-  taskIds: string[];
-}
-
-interface TaskContextType {
-  tasks: { [key: string]: Task };
-  columns: { [key: string]: Column };
-  columnOrder: string[];
-  selectedTaskId: string | null;
-  addTask: (
-    projectId: string,
-    title: string,
-    description: string,
-    assignee: string,
-    dueDate: Date,
-    priority: '低' | '中' | '高'
-  ) => void;
-  updateTask: (
-    id: string,
-    title: string,
-    description: string,
-    assignee: string,
-    dueDate: Date,
-    priority: '低' | '中' | '高'
-  ) => void;
-  deleteTask: (id: string) => void;
-  selectTask: (id: string | null) => void;
-  moveTask: (result: DragEndEvent) => void;
-  getIncompleteTasksCount: (projectId: string) => number;
-}
+import {
+  Task,
+  Column,
+  TaskContextType,
+  TaskStatus,
+  TaskPriority,
+  TASK_STATUSES,
+  TASK_PRIORITIES
+} from '@/app/types/task';
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 

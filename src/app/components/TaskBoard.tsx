@@ -17,24 +17,7 @@ import { TaskItem } from '@/app/components/TaskItem';
 import { TaskColumn } from '@/app/components/TaskColumn';
 import TaskModal from '@/app/components/TaskModal';
 import { useTask } from '@/app/contexts/TaskContext';
-
-/**
- * タスクボードのプロパティ
- * @property selectedProjectId - 選択中のプロジェクトID
- * @property onAddTask - 新規タスク追加時のコールバック
- * @property onTaskMove - タスク移動時のコールバック
- * @property onEditTask - タスク編集時のコールバック
- * @property onCompleteProject - プロジェクト完了時のコールバック（オプション）
- * @property projectStatus - プロジェクトの現在のステータス（オプション）
- */
-interface TaskBoardProps {
-  selectedProjectId: string | null;
-  onAddTask: () => void;
-  onTaskMove: (result: DragEndEvent) => void;
-  onEditTask: (taskId: string) => void;
-  onCompleteProject?: () => void;
-  projectStatus?: string;
-}
+import { TaskBoardProps } from '@/app/types/props';
 
 /**
  * タスクボードコンポーネント
