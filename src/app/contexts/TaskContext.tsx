@@ -3,15 +3,21 @@
 import React, { createContext, useContext, useState } from 'react';
 import { DragEndEvent } from '@dnd-kit/core';
 
+export type TaskStatus = '未着手' | '進行中' | '完了';
+export type TaskPriority = '低' | '中' | '高';
+
+export const TASK_STATUSES: TaskStatus[] = ['未着手', '進行中', '完了'];
+export const TASK_PRIORITIES: TaskPriority[] = ['低', '中', '高'];
+
 interface Task {
   id: string;
   projectId: string;
   title: string;
   description: string;
-  status: '未着手' | '進行中' | '完了';
+  status: TaskStatus;
   assignee: string;
   dueDate: string;
-  priority: '低' | '中' | '高';
+  priority: TaskPriority;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,9 +85,21 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     description: string,
     assignee: string,
     dueDate: Date,
-    priority: '低' | '中' | '高',
-    status: '未着手' | '進行中' | '完了' = '未着手'
+    priority: TaskPriority,
+    status: TaskStatus = '未着手'
   ) => {
+    if (!projectId || !title) {
+      throw new Error('プロジェクトIDとタイトルは必須です');
+    }
+
+    if (!TASK_STATUSES.includes(status)) {
+      throw new Error('無効なステータスです');
+    }
+
+    if (!TASK_PRIORITIES.includes(priority)) {
+      throw new Error('無効な優先度です');
+    }
+
     const now = new Date().toISOString();
     const newTaskId = `task-${Object.keys(tasks).length + 1}`;
     const newTask: Task = {
@@ -117,10 +135,20 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     description: string,
     assignee: string,
     dueDate: Date,
-    priority: '低' | '中' | '高'
+    priority: TaskPriority
   ) => {
     const task = tasks[id];
-    if (!task) return;
+    if (!task) {
+      throw new Error('指定されたタスクが見つかりません');
+    }
+
+    if (!title) {
+      throw new Error('タイトルは必須です');
+    }
+
+    if (!TASK_PRIORITIES.includes(priority)) {
+      throw new Error('無効な優先度です');
+    }
 
     const updatedTask = {
       ...task,
@@ -166,6 +194,52 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     setSelectedTaskId(id);
   };
 
+  const moveTaskBetweenColumns = (
+    activeId: string,
+    targetColumnId: string,
+    sourceColumnId: string
+  ) => {
+    setColumns({
+      ...columns,
+      [sourceColumnId]: {
+        ...columns[sourceColumnId],
+        taskIds: columns[sourceColumnId].taskIds.filter((id) => id !== activeId),
+      },
+      [targetColumnId]: {
+        ...columns[targetColumnId],
+        taskIds: [...columns[targetColumnId].taskIds, activeId],
+      },
+    });
+
+    setTasks({
+      ...tasks,
+      [activeId]: {
+        ...tasks[activeId],
+        status: targetColumnId as '未着手' | '進行中' | '完了',
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  };
+
+  const reorderTasksInColumn = (
+    columnId: string,
+    taskId: string,
+    oldIndex: number,
+    newIndex: number
+  ) => {
+    const currentTasks = [...columns[columnId].taskIds];
+    currentTasks.splice(oldIndex, 1);
+    currentTasks.splice(newIndex, 0, taskId);
+
+    setColumns({
+      ...columns,
+      [columnId]: {
+        ...columns[columnId],
+        taskIds: currentTasks,
+      },
+    });
+  };
+
   const moveTask = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -173,100 +247,34 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // カラムへのドロップを処理
-    const overColumn = columnOrder.find((columnId) => columnId === overId);
-    if (overColumn) {
-      const activeColumn = Object.values(columns).find((column) =>
+    const targetColumn = columnOrder.find((columnId) => columnId === overId);
+    if (targetColumn) {
+      const sourceColumn = Object.values(columns).find((column) =>
         column.taskIds.includes(activeId)
       );
-      if (!activeColumn) return;
-
-      // タスクを移動
-      const updatedColumns = {
-        ...columns,
-        [activeColumn.id]: {
-          ...activeColumn,
-          taskIds: activeColumn.taskIds.filter((id) => id !== activeId),
-        },
-        [overColumn]: {
-          ...columns[overColumn],
-          taskIds: [...columns[overColumn].taskIds, activeId],
-        },
-      };
-
-      setColumns(updatedColumns);
-
-      // タスクのステータスを更新
-      const updatedTask = {
-        ...tasks[activeId],
-        status: overColumn as '未着手' | '進行中' | '完了',
-        updatedAt: new Date().toISOString(),
-      };
-
-      setTasks({
-        ...tasks,
-        [activeId]: updatedTask,
-      });
+      if (!sourceColumn) return;
+      
+      moveTaskBetweenColumns(activeId, targetColumn, sourceColumn.id);
       return;
     }
 
-    // タスク上へのドロップを処理
     const overTask = tasks[overId];
     if (overTask) {
       const targetColumn = Object.values(columns).find((column) =>
         column.taskIds.includes(overId)
       );
-      const activeColumn = Object.values(columns).find((column) =>
+      const sourceColumn = Object.values(columns).find((column) =>
         column.taskIds.includes(activeId)
       );
-      if (!targetColumn || !activeColumn) return;
+      if (!targetColumn || !sourceColumn) return;
 
-      // 同じカラム内での移動の場合
-      if (targetColumn.id === activeColumn.id) {
-        const currentTasks = [...targetColumn.taskIds];
-        const oldIndex = currentTasks.indexOf(activeId);
-        const newIndex = currentTasks.indexOf(overId);
-
-        // タスクの順序を入れ替え
-        currentTasks.splice(oldIndex, 1);
-        currentTasks.splice(newIndex, 0, activeId);
-
-        setColumns({
-          ...columns,
-          [targetColumn.id]: {
-            ...targetColumn,
-            taskIds: currentTasks,
-          },
-        });
-        return;
+      if (targetColumn.id === sourceColumn.id) {
+        const oldIndex = targetColumn.taskIds.indexOf(activeId);
+        const newIndex = targetColumn.taskIds.indexOf(overId);
+        reorderTasksInColumn(targetColumn.id, activeId, oldIndex, newIndex);
+      } else {
+        moveTaskBetweenColumns(activeId, targetColumn.id, sourceColumn.id);
       }
-
-      // 異なるカラム間での移動の場合
-      const updatedColumns = {
-        ...columns,
-        [activeColumn.id]: {
-          ...activeColumn,
-          taskIds: activeColumn.taskIds.filter((id) => id !== activeId),
-        },
-        [targetColumn.id]: {
-          ...targetColumn,
-          taskIds: [...targetColumn.taskIds, activeId],
-        },
-      };
-
-      setColumns(updatedColumns);
-
-      // タスクのステータスを更新
-      const updatedTask = {
-        ...tasks[activeId],
-        status: targetColumn.id as '未着手' | '進行中' | '完了',
-        updatedAt: new Date().toISOString(),
-      };
-
-      setTasks({
-        ...tasks,
-        [activeId]: updatedTask,
-      });
     }
   };
 
