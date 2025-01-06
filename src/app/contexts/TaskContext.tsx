@@ -8,7 +8,6 @@ import {
   TaskContextType,
   TaskStatus,
   TaskPriority,
-  TASK_STATUSES,
   TASK_PRIORITIES
 } from '@/app/types/task';
 import { useProject } from './ProjectContext';
@@ -45,14 +44,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     assignee: string,
     dueDate: Date,
     priority: TaskPriority,
-    status: TaskStatus = '未着手'
   ) => {
     if (!projectId || !title) {
       throw new Error('プロジェクトIDとタイトルは必須です');
-    }
-
-    if (!TASK_STATUSES.includes(status)) {
-      throw new Error('無効なステータスです');
     }
 
     if (!TASK_PRIORITIES.includes(priority)) {
@@ -66,7 +60,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       projectId,
       title,
       description,
-      status,
+      status: '未着手',
       assignee,
       dueDate: dueDate.toISOString(),
       priority,
@@ -81,9 +75,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
     setColumns({
       ...columns,
-      [status]: {
-        ...columns[status],
-        taskIds: [...columns[status].taskIds, newTaskId],
+      '未着手': {
+        ...columns['未着手'],
+        taskIds: [...columns['未着手'].taskIds, newTaskId],
       },
     });
 
