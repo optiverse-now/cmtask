@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@/app/components/Atomic/button';
 import { Plus } from 'lucide-react';
-import { Badge } from '@/app/components/ui/badge';
-import ProjectModal from './ProjectModal';
+import { Badge } from '@/app/components/Atomic/badge';
+import ProjectModal from '@/app/components/features/project/ProjectModal';
 import { useTask } from '@/app/contexts/TaskContext';
 
 export type ProjectStatus = '未着手' | '進行中' | '完了';

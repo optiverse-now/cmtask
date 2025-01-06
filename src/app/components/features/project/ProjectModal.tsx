@@ -8,9 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/app/components/ui/dialog';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
+} from '@/app/components/Atomic/dialog';
+import { Button } from '@/app/components/Atomic/button';
+import { Input } from '@/app/components/Atomic/input';
 import {
   Form,
   FormControl,
@@ -18,7 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/app/components/ui/form';
+} from '@/app/components/Atomic/form';
 
 const projectSchema = z.object({
   name: z.string().min(1, '必須項目です'),

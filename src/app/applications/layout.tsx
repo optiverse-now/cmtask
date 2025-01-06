@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import LeftSidebar from '@/app/components/LeftSidebar';
-import RightSidebar from '@/app/components/RightSidebar';
+import LeftSidebar from '@/app/components/Organisms/Sidebar/LeftSidebar';
+import RightSidebar from '@/app/components/Organisms/Sidebar/RightSidebar';
 import { ProjectProvider, useProject } from '@/app/contexts/ProjectContext';
 import { TaskProvider, useTask } from '@/app/contexts/TaskContext';
 

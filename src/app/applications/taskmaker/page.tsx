@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from 'react';
-import TaskBoard from '@/app/components/TaskBoard';
-import CreateTaskModal from '@/app/components/CreateTaskModal';
+import TaskBoard from '@/app/components/features/task/TaskBoard';
+import CreateTaskModal from '@/app/components/features/task/CreateTaskModal';
 import { useProject } from '@/app/contexts/ProjectContext';
 import { useTask } from '@/app/contexts/TaskContext';
-import TaskModal from '@/app/components/TaskModal';
+import TaskModal from '@/app/components/features/task/TaskModal';
 
 export default function TaskMakerPage() {
   const { selectedProjectId, completeProject, getSelectedProject } = useProject();

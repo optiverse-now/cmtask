@@ -11,11 +11,11 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@/app/components/Atomic/button';
 import { Plus, CheckCircle } from 'lucide-react';
-import { TaskItem } from '@/app/components/TaskItem';
-import { TaskColumn } from '@/app/components/TaskColumn';
-import TaskModal from '@/app/components/TaskModal';
+import { TaskCard } from '@/app/components/Molecules/TaskCard/TaskCard';
+import { TaskColumn } from '@/app/components/Organisms/TaskColumn/TaskColumn';
+import TaskModal from '@/app/components/features/task/TaskModal';
 import { useTask } from '@/app/contexts/TaskContext';
 import { TaskBoardProps } from '@/app/types/props';
 
@@ -113,7 +113,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                     strategy={verticalListSortingStrategy}
                   >
                     {columnTasks.map((task) => (
-                      <TaskItem
+                      <TaskCard
                         key={task.id}
                         id={task.id}
                         title={task.title}
