@@ -7,23 +7,23 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useTask } from '@/contexts/TaskContext';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+} from '@/app/components/Atomic/dialog';
+import { Button } from '@/app/components/Atomic/button';
+import { Input } from '@/app/components/Atomic/input';
+import { Textarea } from '@/app/components/Atomic/textarea';
+import { useTask } from '@/app/contexts/TaskContext';
+import { Calendar } from '@/app/components/Atomic/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/Atomic/popover';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/app/lib/utils';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/app/components/Atomic/select';
 
 interface CreateTaskModalProps {
   projectId: string;
@@ -42,7 +42,6 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const [assignee, setAssignee] = useState('');
   const [dueDate, setDueDate] = useState<Date>(new Date());
   const [priority, setPriority] = useState<'低' | '中' | '高'>('中');
-  const [status, setStatus] = useState<'未着手' | '進行中' | '完了'>('未着手');
 
   const handleSubmit = () => {
     addTask(projectId, title, description, assignee, dueDate, priority);
@@ -56,7 +55,6 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     setAssignee('');
     setDueDate(new Date());
     setPriority('中');
-    setStatus('未着手');
   };
 
   return (
@@ -128,19 +126,6 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                 <SelectItem value="低">低</SelectItem>
                 <SelectItem value="中">中</SelectItem>
                 <SelectItem value="高">高</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <label>ステータス</label>
-            <Select value={status} onValueChange={(value) => setStatus(value as '未着手' | '進行中' | '完了')}>
-              <SelectTrigger>
-                <SelectValue placeholder="ステータスを選択" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="未着手">未着手</SelectItem>
-                <SelectItem value="進行中">進行中</SelectItem>
-                <SelectItem value="完了">完了</SelectItem>
               </SelectContent>
             </Select>
           </div>

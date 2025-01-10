@@ -7,23 +7,23 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useTask } from '@/contexts/TaskContext';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+} from '@/app/components/Atomic/dialog';
+import { Button } from '@/app/components/Atomic/button';
+import { Input } from '@/app/components/Atomic/input';
+import { Textarea } from '@/app/components/Atomic/textarea';
+import { useTask } from '@/app/contexts/TaskContext';
+import { Calendar } from '@/app/components/Atomic/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/Atomic/popover';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/app/lib/utils';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/app/components/Atomic/select';
 
 interface TaskModalProps {
   taskId: string;

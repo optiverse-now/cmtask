@@ -11,22 +11,18 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/app/components/Atomic/button';
 import { Plus, CheckCircle } from 'lucide-react';
-import { TaskItem } from '@/components/TaskItem';
-import { TaskColumn } from '@/components/TaskColumn';
-import TaskModal from '@/components/TaskModal';
-import { useTask } from '@/contexts/TaskContext';
+import { TaskCard } from '@/app/components/Molecules/TaskCard/TaskCard';
+import { TaskColumn } from '@/app/components/Organisms/TaskColumn/TaskColumn';
+import TaskModal from '@/app/components/features/task/TaskModal';
+import { useTask } from '@/app/contexts/TaskContext';
+import { TaskBoardProps } from '@/app/types/props';
 
-interface TaskBoardProps {
-  selectedProjectId: string | null;
-  onAddTask: () => void;
-  onTaskMove: (result: DragEndEvent) => void;
-  onEditTask: (taskId: string) => void;
-  onCompleteProject?: () => void;
-  projectStatus?: string;
-}
-
+/**
+ * タスクボードコンポーネント
+ * プロジェクト内のタスクをカンバン方式で表示・管理するコンポーネント
+ */
 const TaskBoard: React.FC<TaskBoardProps> = ({
   selectedProjectId,
   onAddTask,
@@ -117,7 +113,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                     strategy={verticalListSortingStrategy}
                   >
                     {columnTasks.map((task) => (
-                      <TaskItem
+                      <TaskCard
                         key={task.id}
                         id={task.id}
                         title={task.title}
