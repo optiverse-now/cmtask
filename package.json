@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "APP_ENV=development next dev",
     "build": "next build",
     "start": "next start",
+    "build:staging": "APP_ENV=staging next build",
+    "build:production": "APP_ENV=production next build",
+    "start:staging": "APP_ENV=staging next start",
+    "start:production": "APP_ENV=production next start",
     "lint": "next lint"
   },
   "dependencies": {
