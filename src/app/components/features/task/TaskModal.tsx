@@ -45,7 +45,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     if (task) {
       setTitle(task.title);
       setDescription(task.description);
-      setAssignee(task.assignee);
+      setAssignee(task.assignee?.name || '');
       setDueDate(new Date(task.dueDate));
       setPriority(task.priority);
     }
@@ -111,7 +111,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                 onChange={(e) => setAssignee(e.target.value)}
               />
             ) : (
-              <p>{task.assignee}</p>
+              <p>{task.assignee?.name}</p>
             )}
           </div>
           <div className="grid gap-2">
