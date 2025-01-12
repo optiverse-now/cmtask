@@ -2,13 +2,13 @@
 
 import React from 'react';
 import LeftSidebar from '@/app/components/Organisms/Sidebar/LeftSidebar';
-import RightSidebar from '@/app/components/Organisms/Sidebar/RightSidebar';
+// import RightSidebar from '@/app/components/Organisms/Sidebar/RightSidebar';
 import { ProjectProvider, useProject } from '@/app/contexts/ProjectContext';
-import { TaskProvider, useTask } from '@/app/contexts/TaskContext';
+import { TaskProvider } from '@/app/contexts/TaskContext';
 
 function ApplicationContent({ children }: { children: React.ReactNode }) {
   const { projects, selectedProjectId, selectProject, addProject } = useProject();
-  const { tasks, selectedTaskId, selectTask } = useTask();
+  // const { tasks, selectedTaskId, selectTask } = useTask();
 
   return (
     <div className="flex h-screen">
@@ -19,10 +19,10 @@ function ApplicationContent({ children }: { children: React.ReactNode }) {
         onAddProject={addProject}
       />
       <main className="flex-1 overflow-auto">{children}</main>
-      <RightSidebar
+      {/* <RightSidebar
         selectedTask={selectedTaskId ? tasks[selectedTaskId] : null}
         onEditTask={selectTask}
-      />
+      /> */}
     </div>
   );
 }
