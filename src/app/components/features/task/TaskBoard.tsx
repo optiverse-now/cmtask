@@ -1,16 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   DndContext,
   DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
   closestCorners,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 import { Button } from '@/app/components/Atomic/button';
 import { Plus, CheckCircle } from 'lucide-react';
 import { TaskCard } from '@/app/components/Molecules/TaskCard/TaskCard';
@@ -32,13 +30,45 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   projectStatus,
 }) => {
   const { tasks, columns, columnOrder, selectTask, selectedTaskId } = useTask();
+  const [activeId, setActiveId] = useState<string | null>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
       },
     })
   );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    
+    if (!over) return;
+
+    const overId = over.id;
+    const activeType = active.data.current?.type;
+    const overType = over.data.current?.type;
+
+    if (activeType === 'task') {
+      if (overType === 'column') {
+        onTaskMove(event);
+      } else if (overType === 'task') {
+        const modifiedEvent = {
+          ...event,
+          over: {
+            ...over,
+            id: overId.toString().replace('droppable-', '')
+          }
+        };
+        onTaskMove(modifiedEvent);
+      }
+    }
+  };
 
   // 選択されたプロジェクトのタスクのみをフィルタリング
   const filteredTasks = selectedProjectId
@@ -48,27 +78,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
         )
       )
     : {};
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { over } = event;
-    
-    if (!over) return;
-
-    const overId = over.id as string;
-
-    // カラムへのドロップを処理
-    const overColumn = columnOrder.find((columnId) => columnId === overId);
-    if (overColumn) {
-      onTaskMove(event);
-      return;
-    }
-
-    // タスク上へのドロップを処理
-    const overTask = Object.values(filteredTasks).find(task => task.id === overId);
-    if (overTask) {
-      onTaskMove(event);
-    }
-  };
 
   return (
     <div className="flex-1 p-4">
@@ -96,6 +105,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
       {selectedProjectId ? (
         <DndContext
           sensors={sensors}
+          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           collisionDetection={closestCorners}
         >
@@ -107,28 +117,31 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                 .filter(Boolean);
 
               return (
-                <TaskColumn key={column.id} title={column.title} id={column.id}>
-                  <SortableContext
-                    items={columnTasks.map((task) => task.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {columnTasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        id={task.id}
-                        title={task.title}
-                        description={task.description}
-                        assignee={task.assignee}
-                        dueDate={task.dueDate}
-                        priority={task.priority}
-                        onClick={() => onEditTask(task.id)}
-                      />
-                    ))}
-                  </SortableContext>
+                <TaskColumn key={column.id} id={column.id} title={column.title}>
+                  {columnTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      id={task.id}
+                      title={task.title}
+                      description={task.description}
+                      assignee={task.assignee}
+                      dueDate={task.dueDate}
+                      priority={task.priority}
+                      onClick={() => onEditTask(task.id)}
+                    />
+                  ))}
                 </TaskColumn>
               );
             })}
           </div>
+          <DragOverlay>
+            {activeId && tasks[activeId] ? (
+              <TaskCard
+                {...tasks[activeId]}
+                onClick={() => {}}
+              />
+            ) : null}
+          </DragOverlay>
         </DndContext>
       ) : (
         <div className="flex h-full items-center justify-center">
