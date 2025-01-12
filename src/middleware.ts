@@ -9,22 +9,22 @@ export const config = {
 // 定数
 const PRODUCTION_DOMAIN = 'optiverse-now.com';
 const STAGING_DOMAIN = 'dev.optiverse-now.com';
-const LOCAL_DOMAIN = 'localhost:3000';
+const DEVELOPMENT_DOMAIN = 'localhost:3000';
 
 // 環境判定用の関数
-const getEnvironment = (hostname: string | null): 'production' | 'staging' | 'local' | 'unknown' => {
+const getEnvironment = (hostname: string | null): 'production' | 'staging' | 'development' | 'unknown' => {
   if (!hostname) return 'unknown';
   
   if (hostname.includes(PRODUCTION_DOMAIN)) return 'production';
   if (hostname.includes(STAGING_DOMAIN)) return 'staging';
-  if (hostname.includes(LOCAL_DOMAIN)) return 'local';
+  if (hostname.includes(DEVELOPMENT_DOMAIN)) return 'development';
   
   return 'unknown';
 };
 
 // Basic認証の有効/無効判定
 const isBasicAuthEnabled = (): boolean => {
-  const appEnv = process.env.APP_ENV || 'develop';
+  const appEnv = process.env.APP_ENV || 'development';
   console.log('Current APP_ENV:', appEnv);
   return process.env.BASIC_AUTH_ENABLED === 'true';
 };
