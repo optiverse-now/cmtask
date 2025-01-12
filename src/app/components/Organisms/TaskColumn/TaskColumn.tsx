@@ -1,5 +1,5 @@
-import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { Card } from '@/app/components/Atomic/card';
 
 interface TaskColumnProps {
   id: string;
@@ -9,20 +9,24 @@ interface TaskColumnProps {
 
 export const TaskColumn: React.FC<TaskColumnProps> = ({ id, title, children }) => {
   const { setNodeRef, isOver } = useDroppable({
-    id: id,
+    id,
+    data: {
+      type: 'column'
+    }
   });
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <h3 className="mb-4 text-lg font-semibold">{title}</h3>
-      <div
-        ref={setNodeRef}
-        className={`min-h-[200px] space-y-2 transition-colors ${
-          isOver ? 'bg-accent/50' : ''
-        }`}
-      >
+    <Card 
+      ref={setNodeRef}
+      className={`
+        p-4 h-full
+        ${isOver ? 'bg-accent' : ''}
+      `}
+    >
+      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      <div className="space-y-2">
         {children}
       </div>
-    </div>
+    </Card>
   );
 }; 

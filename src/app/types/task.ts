@@ -1,8 +1,8 @@
 export type TaskStatus = '未着手' | '進行中' | '完了';
-export type TaskPriority = '低' | '中' | '高';
+export type TaskPriority = '高' | '中' | '低';
 
 export const TASK_STATUSES: TaskStatus[] = ['未着手', '進行中', '完了'];
-export const TASK_PRIORITIES: TaskPriority[] = ['低', '中', '高'];
+export const TASK_PRIORITIES: TaskPriority[] = ['高', '中', '低'];
 
 export interface Task {
   id: string;
@@ -10,7 +10,10 @@ export interface Task {
   title: string;
   description: string;
   status: TaskStatus;
-  assignee: string;
+  assignee?: {
+    name: string;
+    avatarUrl?: string;
+  };
   dueDate: string;
   priority: TaskPriority;
   createdAt: string;
