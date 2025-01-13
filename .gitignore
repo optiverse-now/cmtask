@@ -44,3 +44,6 @@ next-env.d.ts
 /AI-TDD
 .cursorrules
 /TODO
+.swc
+.github
+.husky

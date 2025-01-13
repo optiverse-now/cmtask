@@ -11,7 +11,7 @@
     "start:staging": "APP_ENV=staging next start",
     "start:production": "APP_ENV=production next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "jest --ci",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prepare": "husky",
@@ -99,7 +99,8 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
-      "prettier --write"
+      "prettier --write",
+      "jest --findRelatedTests --passWithNoTests"
     ]
   }
 }
