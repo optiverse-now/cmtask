@@ -59,7 +59,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>新規タスク作成</DialogTitle>
           <DialogDescription>
@@ -82,6 +82,19 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="タスクの説明"
             />
+          </div>
+          <div className="grid gap-2">
+            <label>優先度</label>
+            <Select value={priority} onValueChange={(value) => setPriority(value as '低' | '中' | '高')}>
+              <SelectTrigger>
+                <SelectValue placeholder="優先度を選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="低">低</SelectItem>
+                <SelectItem value="中">中</SelectItem>
+                <SelectItem value="高">高</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-2">
             <label>担当者</label>
@@ -115,19 +128,6 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                 />
               </PopoverContent>
             </Popover>
-          </div>
-          <div className="grid gap-2">
-            <label>優先度</label>
-            <Select value={priority} onValueChange={(value) => setPriority(value as '低' | '中' | '高')}>
-              <SelectTrigger>
-                <SelectValue placeholder="優先度を選択" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="低">低</SelectItem>
-                <SelectItem value="中">中</SelectItem>
-                <SelectItem value="高">高</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>
