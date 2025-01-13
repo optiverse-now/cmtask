@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  projects     Project[]
+  tasks        Task[]
+  chats        Chat[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  status      String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tasks       Task[]
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("projects")
+}
+
+model Task {
+  id            String   @id @default(uuid())
+  title         String
+  description   String?
+  priority      String
+  dueDate       DateTime @map("due_date")
+  projectId     String   @map("project_id")
+  assigneeName  String   @map("assignee_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  project       Project  @relation(fields: [projectId], references: [id])
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("tasks")
+}
+
+model Chat {
+  id              String            @id @default(uuid())
+  userId          String            @map("user_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  user            User              @relation(fields: [userId], references: [id])
+  shortTermMemory ShortTermMemory[]
+  midTermMemory   MidTermMemory[]
+  longTermMemory  LongTermMemory[]
+
+  @@map("chats")
+}
+
+model ShortTermMemory {
+  id        String   @id @default(uuid())
+  chatId    String   @map("chat_id")
+  messages  Json
+  createdAt DateTime @default(now()) @map("created_at")
+  chat      Chat     @relation(fields: [chatId], references: [id])
+
+  @@map("short_term_memories")
+}
+
+model MidTermMemory {
+  id        String   @id @default(uuid())
+  chatId    String   @map("chat_id")
+  summary   String
+  createdAt DateTime @default(now()) @map("created_at")
+  chat      Chat     @relation(fields: [chatId], references: [id])
+
+  @@map("mid_term_memories")
+}
+
+model LongTermMemory {
+  id         String   @id @default(uuid())
+  chatId     String   @map("chat_id")
+  keyPoints  Json     @map("key_points")
+  createdAt  DateTime @default(now()) @map("created_at")
+  chat       Chat     @relation(fields: [chatId], references: [id])
+
+  @@map("long_term_memories")
+} 
