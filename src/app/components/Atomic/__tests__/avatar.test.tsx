@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../avatar";
 describe("Avatar Components", () => {
   it("Avatarが正しくレンダリングされること", () => {
     render(
-      <Avatar>
+      <Avatar data-testid="avatar">
         <AvatarImage src="/test-image.jpg" alt="test avatar" />
         <AvatarFallback>TB</AvatarFallback>
       </Avatar>,
@@ -16,16 +16,17 @@ describe("Avatar Components", () => {
 
   it("AvatarImageが適切なサイズとアスペクト比を持つこと", () => {
     render(
-      <Avatar>
+      <Avatar data-testid="avatar">
         <AvatarImage
           src="/test-image.jpg"
           alt="test avatar"
           className="test-image"
+          data-testid="avatar-image"
         />
       </Avatar>,
     );
 
-    const image = screen.getByAltText("test avatar");
+    const image = screen.getByTestId("avatar-image");
     expect(image).toHaveClass(
       "test-image",
       "aspect-square",
@@ -36,12 +37,12 @@ describe("Avatar Components", () => {
 
   it("AvatarFallbackが正しく表示されること", () => {
     render(
-      <Avatar>
-        <AvatarFallback>TB</AvatarFallback>
+      <Avatar data-testid="avatar">
+        <AvatarFallback data-testid="avatar-fallback">TB</AvatarFallback>
       </Avatar>,
     );
 
-    const fallback = screen.getByText("TB");
+    const fallback = screen.getByTestId("avatar-fallback");
     expect(fallback).toBeInTheDocument();
     expect(fallback).toHaveClass(
       "flex",
@@ -56,19 +57,25 @@ describe("Avatar Components", () => {
 
   it("カスタムクラス名が各コンポーネントに適用されること", () => {
     render(
-      <Avatar className="custom-avatar">
+      <Avatar className="custom-avatar" data-testid="avatar">
         <AvatarImage
           src="/test-image.jpg"
           alt="test avatar"
           className="custom-image"
+          data-testid="avatar-image"
         />
-        <AvatarFallback className="custom-fallback">TB</AvatarFallback>
+        <AvatarFallback
+          className="custom-fallback"
+          data-testid="avatar-fallback"
+        >
+          TB
+        </AvatarFallback>
       </Avatar>,
     );
 
     const avatar = screen.getByTestId("avatar");
-    const image = screen.getByAltText("test avatar");
-    const fallback = screen.getByText("TB");
+    const image = screen.getByTestId("avatar-image");
+    const fallback = screen.getByTestId("avatar-fallback");
 
     expect(avatar).toHaveClass("custom-avatar");
     expect(image).toHaveClass("custom-image");
@@ -78,7 +85,11 @@ describe("Avatar Components", () => {
   it("Avatarのデフォルトスタイルが適用されること", () => {
     render(
       <Avatar data-testid="avatar">
-        <AvatarImage src="/test-image.jpg" alt="test avatar" />
+        <AvatarImage
+          src="/test-image.jpg"
+          alt="test avatar"
+          data-testid="avatar-image"
+        />
       </Avatar>,
     );
 

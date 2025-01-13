@@ -6,12 +6,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "../dialog";
 
 describe("Dialog Components", () => {
   it("ダイアログヘッダーが正しくレンダリングされること", () => {
     render(
-      <Dialog>
+      <Dialog defaultOpen>
+        <DialogTrigger>Open Dialog</DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Test Title</DialogTitle>
@@ -27,7 +29,8 @@ describe("Dialog Components", () => {
 
   it("ダイアログタイトルに適切なスタイルが適用されること", () => {
     render(
-      <Dialog>
+      <Dialog defaultOpen>
+        <DialogTrigger>Open Dialog</DialogTrigger>
         <DialogContent>
           <DialogTitle>Test Title</DialogTitle>
         </DialogContent>
@@ -39,7 +42,8 @@ describe("Dialog Components", () => {
 
   it("ダイアログの説明文に適切なスタイルが適用されること", () => {
     render(
-      <Dialog>
+      <Dialog defaultOpen>
+        <DialogTrigger>Open Dialog</DialogTrigger>
         <DialogContent>
           <DialogDescription>Test Description</DialogDescription>
         </DialogContent>
@@ -51,25 +55,22 @@ describe("Dialog Components", () => {
 
   it("カスタムクラス名が各コンポーネントに適用されること", () => {
     render(
-      <Dialog>
-        <DialogContent className="custom-content">
-          <DialogHeader className="custom-header">
+      <Dialog defaultOpen>
+        <DialogTrigger>Open Dialog</DialogTrigger>
+        <DialogContent className="custom-content" data-testid="dialog-content">
+          <DialogHeader className="custom-header" data-testid="dialog-header">
             <DialogTitle>Header Title</DialogTitle>
           </DialogHeader>
           <div>Content</div>
-          <DialogFooter className="custom-footer">
+          <DialogFooter className="custom-footer" data-testid="dialog-footer">
             <button>OK</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>,
     );
 
-    expect(screen.getByText("Content").parentElement).toHaveClass(
-      "custom-content",
-    );
-    expect(
-      screen.getByText("Header Title").closest(".custom-header"),
-    ).toHaveClass("custom-header");
-    expect(screen.getByText("OK").parentElement).toHaveClass("custom-footer");
+    expect(screen.getByTestId("dialog-content")).toHaveClass("custom-content");
+    expect(screen.getByTestId("dialog-header")).toHaveClass("custom-header");
+    expect(screen.getByTestId("dialog-footer")).toHaveClass("custom-footer");
   });
 });

@@ -10,14 +10,14 @@ describe("Input", () => {
   });
 
   it("カスタムクラス名が適用されること", () => {
-    render(<Input className="custom-input" />);
+    render(<Input className="custom-input" type="text" />);
     const input = screen.getByRole("textbox");
     expect(input).toHaveClass("custom-input");
   });
 
   it("異なるタイプの入力が正しく動作すること", () => {
-    render(<Input type="password" />);
-    const input = screen.getByRole("textbox", { hidden: true });
+    render(<Input type="password" placeholder="パスワード" />);
+    const input = screen.getByPlaceholderText("パスワード");
     expect(input).toHaveAttribute("type", "password");
   });
 });
