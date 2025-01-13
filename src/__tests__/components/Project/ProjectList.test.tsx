@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import ProjectList from "@/app/components/features/Project/ProjectList";
+import ProjectList from "@/app/components/features/project/ProjectList";
 import { useTask } from "@/app/contexts/TaskContext";
 import { PROJECT_MESSAGES } from "@/constants/messages";
 
