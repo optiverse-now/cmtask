@@ -5,3 +5,9 @@
 - ユーザー認証
 - DBとの連携
 - タスク作成AIエージェントの搭載
+
+# Staging環境
+npx dotenv -e .env.staging -- npx prisma migrate deploy
+
+# Production環境
+npx dotenv -e .env.production -- npx prisma migrate deploy
