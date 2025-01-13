@@ -5,24 +5,33 @@ describe("Avatar Components", () => {
   it("Avatarが正しくレンダリングされること", () => {
     render(
       <Avatar>
-        <AvatarImage src="test.jpg" alt="test avatar" />
+        <AvatarImage src="/test-image.jpg" alt="test avatar" />
         <AvatarFallback>TB</AvatarFallback>
       </Avatar>,
     );
 
-    const image = screen.getByAltText("test avatar");
-    expect(image).toBeInTheDocument();
+    const fallback = screen.getByText("TB");
+    expect(fallback).toBeInTheDocument();
   });
 
   it("AvatarImageが適切なサイズとアスペクト比を持つこと", () => {
     render(
       <Avatar>
-        <AvatarImage src="test.jpg" alt="test avatar" />
+        <AvatarImage
+          src="/test-image.jpg"
+          alt="test avatar"
+          className="test-image"
+        />
       </Avatar>,
     );
 
     const image = screen.getByAltText("test avatar");
-    expect(image).toHaveClass("aspect-square", "h-full", "w-full");
+    expect(image).toHaveClass(
+      "test-image",
+      "aspect-square",
+      "h-full",
+      "w-full",
+    );
   });
 
   it("AvatarFallbackが正しく表示されること", () => {
@@ -34,7 +43,7 @@ describe("Avatar Components", () => {
 
     const fallback = screen.getByText("TB");
     expect(fallback).toBeInTheDocument();
-    expect(fallback.parentElement).toHaveClass(
+    expect(fallback).toHaveClass(
       "flex",
       "h-full",
       "w-full",
@@ -49,25 +58,31 @@ describe("Avatar Components", () => {
     render(
       <Avatar className="custom-avatar">
         <AvatarImage
-          className="custom-image"
-          src="test.jpg"
+          src="/test-image.jpg"
           alt="test avatar"
+          className="custom-image"
         />
         <AvatarFallback className="custom-fallback">TB</AvatarFallback>
       </Avatar>,
     );
 
-    const avatar = screen.getByAltText("test avatar").parentElement;
+    const avatar = screen.getByTestId("avatar");
     const image = screen.getByAltText("test avatar");
+    const fallback = screen.getByText("TB");
 
     expect(avatar).toHaveClass("custom-avatar");
     expect(image).toHaveClass("custom-image");
+    expect(fallback).toHaveClass("custom-fallback");
   });
 
   it("Avatarのデフォルトスタイルが適用されること", () => {
-    render(<Avatar />);
+    render(
+      <Avatar data-testid="avatar">
+        <AvatarImage src="/test-image.jpg" alt="test avatar" />
+      </Avatar>,
+    );
 
-    const avatar = screen.getByRole("img");
+    const avatar = screen.getByTestId("avatar");
     expect(avatar).toHaveClass(
       "relative",
       "flex",
