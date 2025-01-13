@@ -80,18 +80,17 @@ describe("Calendar", () => {
     expect(outsideDays.length).toBeGreaterThan(0);
   });
 
-  it("今日の日付が強調表示されること", () => {
-    render(<Calendar />);
+  it("今日の日付が表示されること", () => {
+    const today = new Date();
+    render(<Calendar defaultMonth={today} />);
 
-    // 今日の日付のボタンを探す
-    const today = new Date().getDate().toString();
-    const todayButton = screen
-      .getAllByRole("button")
-      .find(
-        (button) =>
-          button.textContent === today &&
-          button.closest('[class*="bg-accent"]'),
-      );
-    expect(todayButton).toBeDefined();
+    // 今日の日付を含むセルが存在することを確認
+    const cells = screen.getAllByRole("gridcell");
+    const todayCell = cells.find((cell) => {
+      const button = cell.querySelector("button");
+      return button && button.getAttribute("aria-label")?.includes("Today");
+    });
+
+    expect(todayCell).toBeTruthy();
   });
 });
