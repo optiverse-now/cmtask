@@ -139,7 +139,10 @@ describe("LeftSidebar", () => {
     const addButton = screen.getByRole("button", { name: /新規プロジェクト/i });
     await userEvent.click(addButton);
 
-    expect(mockOnAddProject).toHaveBeenCalled();
+    // モーダルの非同期処理を待つ
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(mockOnAddProject).toHaveBeenCalledWith("新規プロジェクト", "説明");
   });
 
   it("プロジェクトのステータスに応じて適切なアイコンが表示されること", () => {
