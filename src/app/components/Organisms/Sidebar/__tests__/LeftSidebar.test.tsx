@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LeftSidebar from "../LeftSidebar";
 
@@ -21,6 +21,23 @@ const mockProjects = [
     updatedAt: new Date().toISOString(),
   },
 ];
+
+// ProjectModalのモック
+jest.mock("@/app/components/features/project/ProjectModal", () => {
+  return function MockProjectModal({
+    onSubmit,
+    isOpen,
+  }: {
+    onSubmit: (data: { name: string; description: string }) => void;
+    isOpen: boolean;
+  }) {
+    if (isOpen) {
+      // モーダルが開いているときだけonSubmitを呼び出す
+      onSubmit({ name: "新規プロジェクト", description: "説明" });
+    }
+    return null;
+  };
+});
 
 // TaskContextのモック
 const mockTasks = {
@@ -137,15 +154,14 @@ describe("LeftSidebar", () => {
     );
 
     const addButton = screen.getByRole("button", { name: /新規プロジェクト/i });
-    await userEvent.click(addButton);
-
-    // モーダルの非同期処理を待つ
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await act(async () => {
+      await userEvent.click(addButton);
+    });
 
     expect(mockOnAddProject).toHaveBeenCalledWith("新規プロジェクト", "説明");
   });
 
-  it("プロジェクトのステータスに応じて適切なアイコンが表示されること", () => {
+  it("プロジェクトのステータスに応じて適切なバッジが表示されること", () => {
     render(
       <LeftSidebar
         projects={mockProjects}
@@ -155,15 +171,8 @@ describe("LeftSidebar", () => {
       />,
     );
 
-    const inProgressProject = screen
-      .getByText("プロジェクト1")
-      .closest("button");
-    const completedProject = screen
-      .getByText("プロジェクト2")
-      .closest("button");
-
-    expect(inProgressProject).toBeInTheDocument();
-    expect(completedProject).toBeInTheDocument();
+    expect(screen.getByText("進行中")).toHaveClass("bg-blue-500");
+    expect(screen.getByText("完了")).toHaveClass("bg-green-500");
   });
 
   it("プロジェクトが空の場合、適切なメッセージが表示されること", () => {
