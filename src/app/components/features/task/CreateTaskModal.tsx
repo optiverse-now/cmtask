@@ -1,29 +1,33 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/app/components/Atomic/dialog';
-import { Button } from '@/app/components/Atomic/button';
-import { Input } from '@/app/components/Atomic/input';
-import { Textarea } from '@/app/components/Atomic/textarea';
-import { useTask } from '@/app/contexts/TaskContext';
-import { Calendar } from '@/app/components/Atomic/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/Atomic/popover';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/app/lib/utils';
+} from "@/app/components/Atomic/dialog";
+import { Button } from "@/app/components/Atomic/button";
+import { Input } from "@/app/components/Atomic/input";
+import { Textarea } from "@/app/components/Atomic/textarea";
+import { useTask } from "@/app/contexts/TaskContext";
+import { Calendar } from "@/app/components/Atomic/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/app/components/Atomic/popover";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/app/lib/utils";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/app/components/Atomic/select';
+} from "@/app/components/Atomic/select";
 
 interface CreateTaskModalProps {
   projectId: string;
@@ -37,24 +41,46 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   onClose,
 }) => {
   const { addTask } = useTask();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [assignee, setAssignee] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [assignee, setAssignee] = useState("");
   const [dueDate, setDueDate] = useState<Date>(new Date());
-  const [priority, setPriority] = useState<'低' | '中' | '高'>('中');
+  const [priority, setPriority] = useState<"低" | "中" | "高">("中");
+  const [errors, setErrors] = useState<{
+    title?: string;
+    description?: string;
+    assignee?: string;
+  }>({});
+
+  const validateForm = () => {
+    const newErrors: {
+      title?: string;
+      description?: string;
+      assignee?: string;
+    } = {};
+
+    if (!title) newErrors.title = "必須項目です";
+    if (!description) newErrors.description = "必須項目です";
+    if (!assignee) newErrors.assignee = "必須項目です";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = () => {
+    if (!validateForm()) return;
     addTask(projectId, title, description, assignee, dueDate, priority);
     resetForm();
     onClose();
   };
 
   const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setAssignee('');
+    setTitle("");
+    setDescription("");
+    setAssignee("");
     setDueDate(new Date());
-    setPriority('中');
+    setPriority("中");
+    setErrors({});
   };
 
   return (
@@ -62,9 +88,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>新規タスク作成</DialogTitle>
-          <DialogDescription>
-            新しいタスクを作成します
-          </DialogDescription>
+          <DialogDescription>新しいタスクを作成します</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -72,20 +96,31 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="タスクのタイトル"
+              placeholder="タスク名を入力"
             />
+            {errors.title && (
+              <p className="text-sm text-red-500">{errors.title}</p>
+            )}
           </div>
           <div className="grid gap-2">
             <label>説明</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="タスクの説明"
+              placeholder="タスクの説明を入力"
             />
+            {errors.description && (
+              <p className="text-sm text-red-500">{errors.description}</p>
+            )}
           </div>
           <div className="grid gap-2">
             <label>優先度</label>
-            <Select value={priority} onValueChange={(value) => setPriority(value as '低' | '中' | '高')}>
+            <Select
+              value={priority}
+              onValueChange={(value) =>
+                setPriority(value as "低" | "中" | "高")
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="優先度を選択" />
               </SelectTrigger>
@@ -101,8 +136,11 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             <Input
               value={assignee}
               onChange={(e) => setAssignee(e.target.value)}
-              placeholder="担当者名"
+              placeholder="担当者を入力"
             />
+            {errors.assignee && (
+              <p className="text-sm text-red-500">{errors.assignee}</p>
+            )}
           </div>
           <div className="grid gap-2">
             <label>期限</label>
@@ -112,7 +150,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !dueDate && "text-muted-foreground"
+                    !dueDate && "text-muted-foreground",
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -133,9 +171,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             <Button variant="outline" onClick={onClose}>
               キャンセル
             </Button>
-            <Button onClick={handleSubmit}>
-              作成
-            </Button>
+            <Button onClick={handleSubmit}>作成</Button>
           </div>
         </div>
       </DialogContent>
@@ -143,4 +179,4 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   );
 };
 
-export default CreateTaskModal; 
+export default CreateTaskModal;
