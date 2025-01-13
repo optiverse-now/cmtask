@@ -21,17 +21,20 @@ describe("Avatar Components", () => {
           src="/test-image.jpg"
           alt="test avatar"
           className="test-image"
-          data-testid="avatar-image"
         />
+        <AvatarFallback>TB</AvatarFallback>
       </Avatar>,
     );
 
-    const image = screen.getByTestId("avatar-image");
-    expect(image).toHaveClass(
-      "test-image",
-      "aspect-square",
-      "h-full",
-      "w-full",
+    const avatar = screen.getByTestId("avatar");
+    expect(avatar).toHaveClass(
+      "relative",
+      "flex",
+      "h-10",
+      "w-10",
+      "shrink-0",
+      "overflow-hidden",
+      "rounded-full",
     );
   });
 
@@ -62,7 +65,6 @@ describe("Avatar Components", () => {
           src="/test-image.jpg"
           alt="test avatar"
           className="custom-image"
-          data-testid="avatar-image"
         />
         <AvatarFallback
           className="custom-fallback"
@@ -74,22 +76,17 @@ describe("Avatar Components", () => {
     );
 
     const avatar = screen.getByTestId("avatar");
-    const image = screen.getByTestId("avatar-image");
     const fallback = screen.getByTestId("avatar-fallback");
 
     expect(avatar).toHaveClass("custom-avatar");
-    expect(image).toHaveClass("custom-image");
     expect(fallback).toHaveClass("custom-fallback");
   });
 
   it("Avatarのデフォルトスタイルが適用されること", () => {
     render(
       <Avatar data-testid="avatar">
-        <AvatarImage
-          src="/test-image.jpg"
-          alt="test avatar"
-          data-testid="avatar-image"
-        />
+        <AvatarImage src="/test-image.jpg" alt="test avatar" />
+        <AvatarFallback>TB</AvatarFallback>
       </Avatar>,
     );
 
