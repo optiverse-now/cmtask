@@ -63,14 +63,16 @@ describe("Dialog Components", () => {
 
   it("カスタムクラス名が各コンポーネントに適用されること", () => {
     render(
-      <>
-        <DialogHeader className="custom-header">Header</DialogHeader>
-        <DialogFooter className="custom-footer">Footer</DialogFooter>
-        <DialogTitle className="custom-title">Title</DialogTitle>
-        <DialogDescription className="custom-desc">
-          Description
-        </DialogDescription>
-      </>,
+      <Dialog>
+        <DialogContent>
+          <DialogHeader className="custom-header">Header</DialogHeader>
+          <DialogFooter className="custom-footer">Footer</DialogFooter>
+          <DialogTitle className="custom-title">Title</DialogTitle>
+          <DialogDescription className="custom-desc">
+            Description
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>,
     );
 
     expect(screen.getByText("Header").parentElement).toHaveClass(
