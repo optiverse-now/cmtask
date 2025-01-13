@@ -1,8 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LeftSidebar from "../LeftSidebar";
-import * as TaskContext from "@/app/contexts/TaskContext";
-import * as ProjectContext from "@/app/contexts/ProjectContext";
 
 // モックデータ
 const mockProjects = [
@@ -41,33 +39,39 @@ const mockTasks = {
 };
 
 // コンテキストのモック
-jest.spyOn(TaskContext, "useTask").mockImplementation(() => ({
-  tasks: mockTasks,
-  getTasksByProjectId: () => Object.values(mockTasks),
-  addTask: jest.fn(),
-  updateTask: jest.fn(),
-  deleteTask: jest.fn(),
-  columns: {
-    "column-1": { id: "column-1", title: "未着手", taskIds: ["task-1"] },
-  },
-  columnOrder: ["column-1"],
-  selectedTaskId: null,
-  selectTask: jest.fn(),
-  moveTask: jest.fn(),
-  getIncompleteTasksCount: jest.fn().mockReturnValue(1),
+jest.mock("@/app/contexts/TaskContext", () => ({
+  ...jest.requireActual("@/app/contexts/TaskContext"),
+  useTask: () => ({
+    tasks: mockTasks,
+    getTasksByProjectId: () => Object.values(mockTasks),
+    addTask: jest.fn(),
+    updateTask: jest.fn(),
+    deleteTask: jest.fn(),
+    columns: {
+      "column-1": { id: "column-1", title: "未着手", taskIds: ["task-1"] },
+    },
+    columnOrder: ["column-1"],
+    selectedTaskId: null,
+    selectTask: jest.fn(),
+    moveTask: jest.fn(),
+    getIncompleteTasksCount: jest.fn().mockReturnValue(1),
+  }),
 }));
 
-jest.spyOn(ProjectContext, "useProject").mockImplementation(() => ({
-  projects: mockProjects,
-  currentProject: mockProjects[0],
-  addProject: jest.fn(),
-  updateProject: jest.fn(),
-  deleteProject: jest.fn(),
-  selectProject: jest.fn(),
-  selectedProjectId: null,
-  completeProject: jest.fn(),
-  getSelectedProject: jest.fn().mockReturnValue(mockProjects[0]),
-  updateProjectStatus: jest.fn(),
+jest.mock("@/app/contexts/ProjectContext", () => ({
+  ...jest.requireActual("@/app/contexts/ProjectContext"),
+  useProject: () => ({
+    projects: mockProjects,
+    currentProject: mockProjects[0],
+    addProject: jest.fn(),
+    updateProject: jest.fn(),
+    deleteProject: jest.fn(),
+    selectProject: jest.fn(),
+    selectedProjectId: null,
+    completeProject: jest.fn(),
+    getSelectedProject: jest.fn().mockReturnValue(mockProjects[0]),
+    updateProjectStatus: jest.fn(),
+  }),
 }));
 
 describe("LeftSidebar", () => {
