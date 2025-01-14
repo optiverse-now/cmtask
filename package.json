@@ -2,6 +2,7 @@
   "name": "cmtask",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "APP_ENV=development next dev",
     "build": "next build",
