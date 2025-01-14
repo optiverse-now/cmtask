@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 export function createClient() {
   return createServerClient(
@@ -8,17 +9,19 @@ export function createClient() {
     {
       cookies: {
         get(name: string) {
-          const cookieStore = cookies();
-          const cookie = cookieStore.get(name);
+          const cookie: RequestCookie | undefined = cookies().get(name) as
+            | RequestCookie
+            | undefined;
           return cookie?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          const cookieStore = cookies();
-          cookieStore.set(name, value, options);
+          cookies().set(name, value, {
+            ...options,
+            secure: process.env.NEXT_PUBLIC_ENV === "production",
+          });
         },
-        remove(name: string, options: CookieOptions) {
-          const cookieStore = cookies();
-          cookieStore.delete(name, options);
+        remove(name: string) {
+          cookies().delete(name);
         },
       },
     },
