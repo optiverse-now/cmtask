@@ -47,3 +47,4 @@ next-env.d.ts
 .swc
 .github
 .husky
+development_supabase.yml
