@@ -5,25 +5,25 @@ import { useRouter } from "next/navigation";
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const supabase = createClientComponentClient();
+  const router = useRouter();
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
       setError(null);
-
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (signInError) {
+        throw signInError;
+      }
 
-      router.refresh();
-      router.push("/applications");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "An error occurred");
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
     } finally {
       setIsLoading(false);
     }
@@ -33,20 +33,18 @@ export const useAuth = () => {
     try {
       setIsLoading(true);
       setError(null);
-
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${location.origin}/auth/confirm`,
-        },
       });
 
-      if (error) throw error;
+      if (signUpError) {
+        throw signUpError;
+      }
 
-      router.push("/auth/check-email");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "An error occurred");
+      router.push('/auth/verify');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'サインアップに失敗しました');
     } finally {
       setIsLoading(false);
     }
@@ -56,14 +54,15 @@ export const useAuth = () => {
     try {
       setIsLoading(true);
       setError(null);
+      const { error: signOutError } = await supabase.auth.signOut();
 
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (signOutError) {
+        throw signOutError;
+      }
 
-      router.refresh();
-      router.push("/login");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "An error occurred");
+      router.push('/auth/login');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ログアウトに失敗しました');
     } finally {
       setIsLoading(false);
     }

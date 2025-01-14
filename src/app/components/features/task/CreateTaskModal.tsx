@@ -7,17 +7,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/Atomic/dialog";
-import { Button } from "@/components/Atomic/button";
-import { Input } from "@/components/Atomic/input";
-import { Textarea } from "@/components/Atomic/textarea";
+} from "@/app/components/Atomic/dialog";
+import { Button } from "@/app/components/Atomic/button";
+import { Input } from "@/app/components/Atomic/input";
+import { Textarea } from "@/app/components/Atomic/textarea";
 import { useTask } from "@/app/contexts/TaskContext";
-import { Calendar } from "@/components/Atomic/calendar";
+import { Calendar } from "@/app/components/Atomic/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/Atomic/popover";
+} from "@/app/components/Atomic/popover";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/Atomic/select";
+} from "@/app/components/Atomic/select";
 
 interface CreateTaskModalProps {
   projectId: string;

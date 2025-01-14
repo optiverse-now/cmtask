@@ -1,5 +1,5 @@
 import { FC, ReactNode } from "react";
-import { Button } from "@/components/Atomic/button";
+import { Button } from "@/app/components/Atomic/button";
 
 interface AuthFormProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ export const AuthForm: FC<AuthFormProps> = ({
   isLoading = false,
 }) => {
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6" role="form">
       {children}
       <div>
         <Button type="submit" className="w-full" disabled={isLoading}>
