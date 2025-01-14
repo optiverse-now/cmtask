@@ -123,12 +123,17 @@ export default function AuthPage() {
                   inputBorderHover: "#3b82f6",
                   inputBorderFocus: "#2563eb",
                 },
-                borderWidths: {
-                  inputBorderWidth: "1px",
+                space: {
+                  inputPadding: "0.5rem 0.75rem",
+                  buttonPadding: "0.5rem 1rem",
                 },
-                borderRadius: {
+                radii: {
                   buttonBorderRadius: "0.375rem",
                   inputBorderRadius: "0.375rem",
+                },
+                borderWidths: {
+                  buttonBorderWidth: "1px",
+                  inputBorderWidth: "1px",
                 },
               },
             },
