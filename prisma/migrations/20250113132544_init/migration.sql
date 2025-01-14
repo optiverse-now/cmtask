@@ -1,48 +1,56 @@
 -- CreateTable
+DROP TABLE IF EXISTS "users" CASCADE;
 CREATE TABLE "users" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "email" TEXT NOT NULL,
-    "password_hash" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "name" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
+-- RLSポリシーの設定
+ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
+
+-- 開発環境用のポリシー（より緩い制約）
+CREATE POLICY "全ユーザーがアクセス可能" ON "users"
+    FOR ALL
+    USING (true);
+
 -- CreateTable
 CREATE TABLE "projects" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT NOT NULL,
     "description" TEXT,
     "status" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "user_id" TEXT NOT NULL,
+    "user_id" UUID NOT NULL,
 
     CONSTRAINT "projects_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "tasks" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "title" TEXT NOT NULL,
     "description" TEXT,
     "priority" TEXT NOT NULL,
     "due_date" TIMESTAMP(3) NOT NULL,
-    "project_id" TEXT NOT NULL,
+    "project_id" UUID NOT NULL,
     "assignee_name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "user_id" TEXT NOT NULL,
+    "user_id" UUID NOT NULL,
 
     CONSTRAINT "tasks_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "chats" (
-    "id" TEXT NOT NULL,
-    "user_id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "user_id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -51,8 +59,8 @@ CREATE TABLE "chats" (
 
 -- CreateTable
 CREATE TABLE "short_term_memories" (
-    "id" TEXT NOT NULL,
-    "chat_id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "chat_id" UUID NOT NULL,
     "messages" JSONB NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -61,8 +69,8 @@ CREATE TABLE "short_term_memories" (
 
 -- CreateTable
 CREATE TABLE "mid_term_memories" (
-    "id" TEXT NOT NULL,
-    "chat_id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "chat_id" UUID NOT NULL,
     "summary" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -71,8 +79,8 @@ CREATE TABLE "mid_term_memories" (
 
 -- CreateTable
 CREATE TABLE "long_term_memories" (
-    "id" TEXT NOT NULL,
-    "chat_id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "chat_id" UUID NOT NULL,
     "key_points" JSONB NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
