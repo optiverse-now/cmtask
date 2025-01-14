@@ -1,5 +1,5 @@
 import { FC, ReactNode } from "react";
-import { Button } from "@/app/components/Atomic/button";
+import { Button } from "@/components/Atomic/button";
 
 interface AuthFormProps {
   children: ReactNode;

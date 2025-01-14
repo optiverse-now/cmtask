@@ -3,8 +3,8 @@
 import * as React from "react"
 import { DayPicker } from "react-day-picker"
 
-import { cn } from "@/app/lib/utils"
-import { buttonVariants } from "@/app/components/Atomic/button"
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/Atomic/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
