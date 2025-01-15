@@ -1,7 +1,8 @@
-import "@testing-library/jest-dom";
+import '@testing-library/jest-dom';
+import { jest } from '@jest/globals';
 
 // グローバルなモックの設定
-jest.mock("next/navigation", () => ({
+jest.mock('next/navigation', () => ({
   useRouter() {
     return {
       push: jest.fn(),
@@ -10,14 +11,14 @@ jest.mock("next/navigation", () => ({
     };
   },
   usePathname() {
-    return "";
+    return '';
   },
 }));
 
 // テスト実行前の共通設定
 beforeAll(() => {
   // コンソールエラーの抑制（必要な場合）
-  jest.spyOn(console, "error").mockImplementation(() => {});
+  jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 
 // テスト実行後のクリーンアップ

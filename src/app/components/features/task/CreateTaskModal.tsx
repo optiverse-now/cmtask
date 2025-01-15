@@ -20,7 +20,7 @@ import {
 } from "@/app/components/Atomic/popover";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { cn } from "@/app/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
