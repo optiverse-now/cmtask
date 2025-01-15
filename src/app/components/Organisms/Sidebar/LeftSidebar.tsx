@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import { Badge } from "@/app/components/Atomic/badge";
 import ProjectModal from "@/app/components/features/project/ProjectModal";
 import { useTask } from "@/app/contexts/TaskContext";
+import { SidebarFooter } from "@/app/components/Atomic/sidebar";
+import { UserAccount } from "@/app/components/Molecules/UserAccount/UserAccount";
 
 export type ProjectStatus = "未着手" | "進行中" | "完了";
 
@@ -31,6 +33,12 @@ const getStatusColor = (status: ProjectStatus) => {
       return "bg-green-500";
   }
 };
+
+const user = {
+  name: "shadon",
+  email: "m@example.com",
+  image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-RY62i1bg1LLM0001YbR5moxstroK5s.png"
+}
 
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
   projects,
@@ -105,6 +113,9 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         onSubmit={handleAddProject}
         mode="create"
       />
+      <SidebarFooter>
+        <UserAccount user={user} />
+      </SidebarFooter>
     </div>
   );
 };

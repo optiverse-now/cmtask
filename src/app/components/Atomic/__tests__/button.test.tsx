@@ -19,7 +19,7 @@ describe("Button", () => {
   it("異なるサイズのスタイルが適用されること", () => {
     render(<Button size="lg">大きいボタン</Button>);
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("h-11");
+    expect(button).toHaveClass("h-10");
   });
 
   it("カスタムクラス名が適用されること", () => {

@@ -2,6 +2,20 @@ import { render, screen } from "@testing-library/react";
 import ApplicationLayout from "../layout";
 import { useProject } from "@/app/contexts/ProjectContext";
 
+// matchMediaのモック
+Object.defineProperty(window, 'matchMedia', {
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
 // Project型の定義
 interface Project {
   id: string;
