@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { CreditCard, LogOut, Settings, User, Bell, Crown } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation';
 
 import {
   DropdownMenu,
@@ -26,6 +28,19 @@ interface UserAccountProps {
 }
 
 export function UserAccount({ user }: UserAccountProps) {
+  const router = useRouter();
+  const supabase = createClient();
+  
+  // ログアウトの処理を追加
+  const logOut = async () => {
+    // supabaseに用意されているログアウトの関数
+    const { error } = await supabase.auth.signOut()
+    if (error) throw new Error(error.message)
+    // ログアウトを反映させるためにリロードさせる
+    router.push('/auth/login')
+  }
+
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -47,28 +62,29 @@ export function UserAccount({ user }: UserAccountProps) {
       <DropdownMenuContent className="w-56" align="start" side="right">
         <DropdownMenuItem>
           <Crown className="mr-2 size-4" />
-          アップグレード
+          アップグレード(未実装)
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
           <User className="mr-2 size-4" />
-          アカウント
+          アカウント(未実装)
         </DropdownMenuItem>
         <DropdownMenuItem>
           <CreditCard className="mr-2 size-4" />
-          課金
+          プラン(未実装)
         </DropdownMenuItem>
         <DropdownMenuItem>
           <Bell className="mr-2 size-4" />
-          通知
+          通知(未実装)
         </DropdownMenuItem>
         <DropdownMenuItem>
           <Settings className="mr-2 size-4" />
-          設定
+          設定(未実装)
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <LogOut className="mr-2 size-4" />
+        <DropdownMenuItem onClick={logOut}>
+          <LogOut
+            className="mr-2 size-4"/>
           ログアウト
         </DropdownMenuItem>
       </DropdownMenuContent>
