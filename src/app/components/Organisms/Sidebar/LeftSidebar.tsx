@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/app/components/Atomic/button";
 import { Plus } from "lucide-react";
 import { Badge } from "@/app/components/Atomic/badge";
@@ -6,6 +6,7 @@ import ProjectModal from "@/app/components/features/project/ProjectModal";
 import { useTask } from "@/app/contexts/TaskContext";
 import { SidebarFooter } from "@/app/components/Atomic/sidebar";
 import { UserAccount } from "@/app/components/Molecules/UserAccount/UserAccount";
+import { createClient } from '@/utils/supabase/client';
 
 export type ProjectStatus = "未着手" | "進行中" | "完了";
 
@@ -14,6 +15,12 @@ interface Project {
   name: string;
   description: string;
   status: ProjectStatus;
+}
+
+interface CurrentUser {
+  name: string;
+  email: string;
+  image?: string;
 }
 
 interface LeftSidebarProps {
@@ -34,12 +41,6 @@ const getStatusColor = (status: ProjectStatus) => {
   }
 };
 
-const user = {
-  name: "shadon",
-  email: "m@example.com",
-  image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-RY62i1bg1LLM0001YbR5moxstroK5s.png"
-}
-
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
   projects,
   selectedProjectId,
@@ -48,11 +49,38 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { getIncompleteTasksCount } = useTask();
+  const [currentUser, setCurrentUser] = useState<CurrentUser>({
+    name: '',
+    email: '',
+    image: ''
+  });
+
+  // 現在ログインしているユーザーを取得する処理
+  const getCurrentUser = async () => {
+    // ログインのセッションを取得する処理
+    const { data } = await createClient().auth.getSession()
+    // セッションがあるときだけ現在ログインしているユーザーを取得する
+    if (data.session !== null) {
+      // supabaseに用意されている現在ログインしているユーザーを取得する関数
+      const { data: { user } } = await createClient().auth.getUser()
+      // currentUserにユーザーのメールアドレスを格納
+      setCurrentUser({
+        name: user?.email?.split('@')[0] ?? 'ユーザー',
+        email: user?.email ?? '',
+        image: user?.user_metadata?.avatar_url
+      })
+    }
+  }
 
   const handleAddProject = (data: { name: string; description: string }) => {
     onAddProject(data.name, data.description);
     setIsModalOpen(false);
   };
+
+  // HeaderコンポーネントがレンダリングされたときにgetCurrentUser関数が実行される
+  useEffect(() => {
+    getCurrentUser()
+  }, [])
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-background">
@@ -114,7 +142,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         mode="create"
       />
       <SidebarFooter>
-        <UserAccount user={user} />
+        <UserAccount user={currentUser} />
       </SidebarFooter>
     </div>
   );
