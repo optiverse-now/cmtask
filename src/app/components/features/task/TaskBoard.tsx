@@ -24,7 +24,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   onAddTask,
   onTaskMove,
   onEditTask,
-  projectStatus,
 }) => {
   const { tasks, columns, columnOrder, selectTask, selectedTaskId } = useTask();
 
