@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   DndContext,
   DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
   closestCorners,
 } from '@dnd-kit/core';
 import { Button } from '@/app/components/Atomic/button';
-import { Plus, CheckCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { TaskCard } from '@/app/components/Molecules/TaskCard/TaskCard';
 import { TaskColumn } from '@/app/components/Organisms/TaskColumn/TaskColumn';
 import TaskModal from '@/app/components/features/task/TaskModal';
@@ -26,11 +24,21 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   onAddTask,
   onTaskMove,
   onEditTask,
-  onCompleteProject,
   projectStatus,
 }) => {
+  console.log('TaskBoard component mounting');
+  
   const { tasks, columns, columnOrder, selectTask, selectedTaskId } = useTask();
-  const [activeId, setActiveId] = useState<string | null>(null);
+
+  console.log('TaskBoard render:', {
+    selectedProjectId,
+    projectStatus,
+    tasks,
+    columns,
+    columnOrder,
+    selectedTaskId,
+    renderingColumns: true
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -40,33 +48,68 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     })
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveId(null);
     
     if (!over) return;
 
-    const overId = over.id;
-    const activeType = active.data.current?.type;
-    const overType = over.data.current?.type;
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    // ドロップ先の種類を判定
+    const isOverColumn = overId.startsWith('column-');
+    const isOverTask = overId.startsWith('task-');
 
-    if (activeType === 'task') {
-      if (overType === 'column') {
-        onTaskMove(event);
-      } else if (overType === 'task') {
-        const modifiedEvent = {
-          ...event,
-          over: {
-            ...over,
-            id: overId.toString().replace('droppable-', '')
-          }
-        };
-        onTaskMove(modifiedEvent);
+    if (!isOverColumn && !isOverTask) {
+      console.error('Invalid drop target:', overId);
+      return;
+    }
+
+    // タスクをドロップした場合の処理
+    if (active.data.current?.type === 'task') {
+      let targetColumnId: string;
+
+      if (isOverColumn) {
+        // カラムに直接ドロップした場合
+        targetColumnId = overId;
+      } else if (isOverTask) {
+        // 他のタスクの上にドロップした場合
+        // task-プレフィックスを除去してタスクIDを取得
+        const targetTaskId = overId.replace('task-', '');
+        // タスクが属するカラムを特定
+        targetColumnId = Object.keys(columns).find(columnId => 
+          columns[columnId].taskIds.includes(targetTaskId)
+        ) || '';
+      } else {
+        return;
       }
+
+      if (!targetColumnId) {
+        console.error('Target column not found');
+        return;
+      }
+
+      // DragEndEventの形式に合わせてイベントを作成
+      const modifiedEvent: DragEndEvent = {
+        ...event,
+        active: {
+          id: activeId,
+          data: active.data,
+          rect: active.rect
+        },
+        over: {
+          id: targetColumnId,
+          data: {
+            current: {
+              type: 'column'
+            }
+          },
+          rect: over.rect,
+          disabled: false
+        }
+      };
+
+      onTaskMove(modifiedEvent);
     }
   };
 
@@ -77,79 +120,53 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
           ([, task]) => task.projectId === selectedProjectId
         )
       )
-    : {};
+    : {}; // プロジェクト未選択時は空のオブジェクト
 
   return (
-    <div className="flex-1 p-4">
+    <div className="flex flex-col h-full w-full p-4 max-w-[100vw] overflow-hidden">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold">タスクボード</h2>
-        {selectedProjectId && (
-          <div className="flex items-center gap-2">
-            {projectStatus !== '完了' && onCompleteProject && (
-              <Button
-                variant="outline"
-                onClick={onCompleteProject}
-                className="flex items-center gap-2"
-              >
-                <CheckCircle className="h-4 w-4" />
-                完了にする
-              </Button>
-            )}
-            <Button onClick={onAddTask} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              新規タスク
-            </Button>
-          </div>
-        )}
-      </div>
-      {selectedProjectId ? (
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          collisionDetection={closestCorners}
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {columnOrder.map((columnId) => {
-              const column = columns[columnId];
-              const columnTasks = column.taskIds
-                .map((taskId) => filteredTasks[taskId])
-                .filter(Boolean);
-
-              return (
-                <TaskColumn key={column.id} id={column.id} title={column.title}>
-                  {columnTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      id={task.id}
-                      title={task.title}
-                      description={task.description}
-                      assignee={task.assignee}
-                      dueDate={task.dueDate}
-                      priority={task.priority}
-                      onClick={() => onEditTask(task.id)}
-                    />
-                  ))}
-                </TaskColumn>
-              );
-            })}
-          </div>
-          <DragOverlay>
-            {activeId && tasks[activeId] ? (
-              <TaskCard
-                {...tasks[activeId]}
-                onClick={() => {}}
-              />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      ) : (
-        <div className="flex h-full items-center justify-center">
-          <p className="text-muted-foreground">
-            プロジェクトを選択してタスクを表示
-          </p>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={onAddTask} 
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            新規タスク
+          </Button>
         </div>
-      )}
+      </div>
+      <DndContext
+        sensors={sensors}
+        onDragEnd={handleDragEnd}
+        collisionDetection={closestCorners}
+      >
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 flex-1 overflow-hidden max-w-full">
+          {columnOrder.map((columnId) => {
+            const column = columns[columnId];
+            const columnTasks = column.taskIds
+              .map((taskId) => filteredTasks[taskId])
+              .filter(Boolean);
+
+            return (
+              <TaskColumn key={column.id} id={column.id} title={column.title}>
+                {columnTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    id={task.id}
+                    title={task.title}
+                    description={task.description}
+                    assignee={task.assignee}
+                    dueDate={task.dueDate}
+                    priority={task.priority}
+                    onClick={() => onEditTask(task.id)}
+                  />
+                ))}
+              </TaskColumn>
+            );
+          })}
+        </div>
+      </DndContext>
       {selectedTaskId && (
         <TaskModal
           taskId={selectedTaskId}

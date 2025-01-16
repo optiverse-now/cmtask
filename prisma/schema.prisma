@@ -38,6 +38,7 @@ model Task {
   id            String   @id @default(uuid())
   title         String
   description   String?
+  status        String
   priority      String
   dueDate       DateTime @map("due_date")
   projectId     String   @map("project_id")

@@ -1,28 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
-import { ProjectStatus } from '@/app/components/Organisms/Sidebar/LeftSidebar';
-import { Task } from '@/app/types/task';
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  status: ProjectStatus;
-  createdAt: string;
-  updatedAt: string;
-}
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Project, ProjectStatus } from '@/app/types/props';
+import { APIClient } from '@/app/lib/api';
 
 interface ProjectContextType {
   projects: Project[];
   selectedProjectId: string | null;
-  addProject: (name: string, description: string) => void;
-  updateProject: (id: string, name: string) => void;
-  deleteProject: (id: string) => void;
+  addProject: (name: string, description: string) => Promise<void>;
+  updateProject: (id: string, name: string, description: string, status: ProjectStatus) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
   selectProject: (id: string) => void;
-  completeProject: (id: string) => void;
-  getSelectedProject: () => Project | undefined;
-  updateProjectStatus: (projectId: string, tasks: { [key: string]: Task }) => void;
+  completeProject: (id: string) => Promise<void>;
+  getSelectedProject: () => Project | null;
+  updateProjectStatus: (id: string, status: ProjectStatus) => Promise<void>;
+  clearProjects: () => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -31,81 +23,81 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-  const addProject = (name: string, description: string) => {
-    const now = new Date().toISOString();
-    const newProject: Project = {
-      id: `project-${projects.length + 1}`,
-      name,
-      description,
-      status: '未着手',
-      createdAt: now,
-      updatedAt: now,
-    };
-    setProjects([...projects, newProject]);
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      const fetchedProjects = await APIClient.getProjects();
+      setProjects(fetchedProjects);
+    } catch (error) {
+      console.error('プロジェクトの取得に失敗しました:', error);
+    }
   };
 
-  const updateProject = (id: string, name: string) => {
-    setProjects(
-      projects.map((project) =>
-        project.id === id
-          ? { ...project, name, updatedAt: new Date().toISOString() }
-          : project
-      )
-    );
+  const addProject = async (name: string, description: string) => {
+    try {
+      const newProject = await APIClient.createProject(name, description);
+      setProjects([...projects, newProject]);
+      setSelectedProjectId(newProject.id);
+    } catch (error) {
+      console.error('プロジェクトの作成に失敗しました:', error);
+      throw error;
+    }
   };
 
-  const deleteProject = (id: string) => {
-    setProjects(projects.filter((project) => project.id !== id));
-    if (selectedProjectId === id) {
-      setSelectedProjectId(null);
+  const updateProject = async (id: string, name: string, description: string, status: ProjectStatus) => {
+    try {
+      const updatedProject = await APIClient.updateProject(id, { name, description, status });
+      setProjects(projects.map(p => p.id === id ? updatedProject : p));
+    } catch (error) {
+      console.error('プロジェクトの更新に失敗しました:', error);
+      throw error;
+    }
+  };
+
+  const deleteProject = async (id: string) => {
+    try {
+      await APIClient.deleteProject(id);
+      setProjects(projects.filter(p => p.id !== id));
+      if (selectedProjectId === id) {
+        setSelectedProjectId(null);
+      }
+    } catch (error) {
+      console.error('プロジェクトの削除に失敗しました:', error);
+      throw error;
     }
   };
 
   const selectProject = (id: string) => {
+    console.log('Selecting project:', id);
     setSelectedProjectId(id);
   };
 
-  const completeProject = (id: string) => {
-    setProjects(
-      projects.map((project) =>
-        project.id === id
-          ? { ...project, status: '完了', updatedAt: new Date().toISOString() }
-          : project
-      )
-    );
+  const completeProject = async (id: string) => {
+    await updateProjectStatus(id, '完了');
   };
 
   const getSelectedProject = () => {
-    return projects.find((project) => project.id === selectedProjectId);
+    const selected = projects.find(p => p.id === selectedProjectId) || null;
+    console.log('Selected project:', selected);
+    return selected;
   };
 
-  const updateProjectStatus = (projectId: string, tasks: { [key: string]: Task }) => {
-    const projectTasks = Object.values(tasks).filter(task => task.projectId === projectId);
-    
-    if (projectTasks.length === 0) {
-      setProjects(projects.map(project =>
-        project.id === projectId
-          ? { ...project, status: '未着手', updatedAt: new Date().toISOString() }
-          : project
-      ));
-      return;
+  const updateProjectStatus = async (id: string, status: ProjectStatus) => {
+    try {
+      const updatedProject = await APIClient.updateProject(id, { status });
+      setProjects(projects.map(p => p.id === id ? updatedProject : p));
+    } catch (error) {
+      console.error('プロジェクトのステータス更新に失敗しました:', error);
+      throw error;
     }
+  };
 
-    const hasInProgressOrCompletedTasks = projectTasks.some(task => 
-      task.status === '進行中' || task.status === '完了'
-    );
-
-    const allTasksNotStarted = projectTasks.every(task => task.status === '未着手');
-
-    setProjects(projects.map(project =>
-      project.id === projectId
-        ? {
-            ...project,
-            status: hasInProgressOrCompletedTasks ? '進行中' : (allTasksNotStarted ? '未着手' : project.status),
-            updatedAt: new Date().toISOString()
-          }
-        : project
-    ));
+  const clearProjects = () => {
+    setProjects([]);
+    setSelectedProjectId(null);
   };
 
   return (
@@ -120,6 +112,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         completeProject,
         getSelectedProject,
         updateProjectStatus,
+        clearProjects,
       }}
     >
       {children}

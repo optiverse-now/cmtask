@@ -4,6 +4,7 @@ import * as React from "react"
 import { CreditCard, LogOut, Settings, User, Bell, Crown } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation';
+import { useProject } from '@/app/contexts/ProjectContext';
 
 import {
   DropdownMenu,
@@ -30,9 +31,12 @@ interface UserAccountProps {
 export function UserAccount({ user }: UserAccountProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { clearProjects } = useProject();
   
   // ログアウトの処理を追加
   const logOut = async () => {
+    // プロジェクトの状態をクリア
+    clearProjects();
     // supabaseに用意されているログアウトの関数
     const { error } = await supabase.auth.signOut()
     if (error) throw new Error(error.message)
