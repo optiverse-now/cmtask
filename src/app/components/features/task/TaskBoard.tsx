@@ -26,19 +26,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   onEditTask,
   projectStatus,
 }) => {
-  console.log('TaskBoard component mounting');
-  
   const { tasks, columns, columnOrder, selectTask, selectedTaskId } = useTask();
-
-  console.log('TaskBoard render:', {
-    selectedProjectId,
-    projectStatus,
-    tasks,
-    columns,
-    columnOrder,
-    selectedTaskId,
-    renderingColumns: true
-  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -60,10 +48,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     const isOverColumn = overId.startsWith('column-');
     const isOverTask = overId.startsWith('task-');
 
-    if (!isOverColumn && !isOverTask) {
-      console.error('Invalid drop target:', overId);
-      return;
-    }
+    if (!isOverColumn && !isOverTask) return;
 
     // タスクをドロップした場合の処理
     if (active.data.current?.type === 'task') {
@@ -84,10 +69,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
         return;
       }
 
-      if (!targetColumnId) {
-        console.error('Target column not found');
-        return;
-      }
+      if (!targetColumnId) return;
 
       // DragEndEventの形式に合わせてイベントを作成
       const modifiedEvent: DragEndEvent = {

@@ -109,12 +109,6 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         
         // ステータスが変更された場合のみ更新を行う
         if (currentProject.status !== newStatus) {
-          console.log('Updating project status:', {
-            projectId: selectedProjectId,
-            oldStatus: currentProject.status,
-            newStatus,
-            tasks: projectTasks.map(t => ({ id: t.id, status: t.status }))
-          });
           await updateProjectStatus(selectedProjectId, newStatus);
         }
       }
