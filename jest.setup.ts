@@ -24,4 +24,19 @@ beforeAll(() => {
 // テスト実行後のクリーンアップ
 afterAll(() => {
   jest.restoreAllMocks();
+});
+
+// グローバルなモックの設定
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
 }); 
