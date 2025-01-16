@@ -23,8 +23,6 @@ app.get('/health', (c) => c.json({ status: 'ok', env: process.env.APP_ENV }))
 
 // サーバーの起動
 const port = process.env.API_PORT || 8000
-console.log(`Server is running on port ${port}`)
-console.log(`Environment: ${process.env.APP_ENV}`)
 
 serve({
   fetch: app.fetch,
