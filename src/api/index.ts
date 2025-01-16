@@ -14,7 +14,8 @@ app.use('*', cors({
     'http://localhost:3000',
     'https://dev.optiverse-now.com',
     'https://optiverse-now.com',
-    'https://api-dev.optiverse-now.com'
+    'https://api-dev.optiverse-now.com',
+    'https://api.optiverse-now.com',
   ],
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
