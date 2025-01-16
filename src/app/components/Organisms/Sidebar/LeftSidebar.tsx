@@ -7,6 +7,8 @@ import { useTask } from "@/app/contexts/TaskContext";
 import { SidebarFooter } from "@/app/components/Atomic/sidebar";
 import { UserAccount } from "@/app/components/Molecules/UserAccount/UserAccount";
 import { createClient } from '@/utils/supabase/client';
+import { useProject } from "@/app/contexts/ProjectContext";
+import { Task } from "@/app/types/props";
 
 export type ProjectStatus = "未着手" | "進行中" | "完了";
 
@@ -41,6 +43,40 @@ const getStatusColor = (status: ProjectStatus) => {
   }
 };
 
+const calculateProjectStatus = (tasks: Task[]): ProjectStatus => {
+  // タスクが存在しない場合は未着手
+  if (tasks.length === 0) {
+    return "未着手";
+  }
+
+  // すべてのタスクが完了の場合
+  const allTasksCompleted = tasks.every(task => task.status === "完了");
+  if (allTasksCompleted) {
+    return "完了";
+  }
+
+  // 進行中のタスクが1つでもある場合は進行中
+  const hasInProgress = tasks.some(task => task.status === "進行中");
+  if (hasInProgress) {
+    return "進行中";
+  }
+
+  // 未着手と完了が混在している場合は進行中
+  const hasNotStarted = tasks.some(task => task.status === "未着手");
+  const hasCompleted = tasks.some(task => task.status === "完了");
+  if (hasNotStarted && hasCompleted) {
+    return "進行中";
+  }
+
+  // すべてのタスクが未着手の場合
+  if (tasks.every(task => task.status === "未着手")) {
+    return "未着手";
+  }
+
+  // デフォルトは進行中
+  return "進行中";
+};
+
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
   projects,
   selectedProjectId,
@@ -48,22 +84,49 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onAddProject,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { getIncompleteTasksCount } = useTask();
+  const { tasks, getIncompleteTasksCount } = useTask();
+  const { updateProjectStatus } = useProject();
   const [currentUser, setCurrentUser] = useState<CurrentUser>({
     name: '',
     email: '',
     image: ''
   });
 
+  // プロジェクトのステータスを更新する
+  useEffect(() => {
+    const updateStatus = async () => {
+      if (selectedProjectId) {
+        const currentProject = projects.find(p => p.id === selectedProjectId);
+        if (!currentProject) return;
+
+        // プロジェクトに属するタスクを配列として取得
+        const projectTasks = Object.values(tasks).filter(
+          task => task.projectId === selectedProjectId
+        );
+
+        // 新しいステータスを計算
+        const newStatus = calculateProjectStatus(projectTasks);
+        
+        // ステータスが変更された場合のみ更新を行う
+        if (currentProject.status !== newStatus) {
+          console.log('Updating project status:', {
+            projectId: selectedProjectId,
+            oldStatus: currentProject.status,
+            newStatus,
+            tasks: projectTasks.map(t => ({ id: t.id, status: t.status }))
+          });
+          await updateProjectStatus(selectedProjectId, newStatus);
+        }
+      }
+    };
+    updateStatus();
+  }, [selectedProjectId, tasks, projects, updateProjectStatus]);
+
   // 現在ログインしているユーザーを取得する処理
   const getCurrentUser = async () => {
-    // ログインのセッションを取得する処理
     const { data } = await createClient().auth.getSession()
-    // セッションがあるときだけ現在ログインしているユーザーを取得する
     if (data.session !== null) {
-      // supabaseに用意されている現在ログインしているユーザーを取得する関数
       const { data: { user } } = await createClient().auth.getUser()
-      // currentUserにユーザーのメールアドレスを格納
       setCurrentUser({
         name: user?.email?.split('@')[0] ?? 'ユーザー',
         email: user?.email ?? '',
@@ -77,7 +140,6 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     setIsModalOpen(false);
   };
 
-  // HeaderコンポーネントがレンダリングされたときにgetCurrentUser関数が実行される
   useEffect(() => {
     getCurrentUser()
   }, [])

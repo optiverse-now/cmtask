@@ -1,5 +1,4 @@
 import { DragEndEvent } from '@dnd-kit/core';
-import { TaskPriority } from './task';
 
 export interface TaskBoardProps {
   selectedProjectId: string | null;
@@ -42,4 +41,34 @@ export interface TaskCardProps {
   dueDate?: string;
   priority: TaskPriority;
   onClick: () => void;
+}
+
+export type ProjectStatus = '未着手' | '進行中' | '完了';
+export type TaskStatus = '未着手' | '進行中' | '完了';
+export type TaskPriority = '低' | '中' | '高';
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Task {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  assignee: {
+    name: string;
+    avatarUrl?: string;
+  };
+  dueDate: string;
+  priority: TaskPriority;
+  createdAt: string;
+  updatedAt: string;
 } 

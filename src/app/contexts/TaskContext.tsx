@@ -1,92 +1,202 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
-import { DragEndEvent } from '@dnd-kit/core';
-import {
-  Task,
-  Column,
-  TaskContextType,
-  TaskStatus,
-  TaskPriority,
-  TASK_PRIORITIES
-} from '@/app/types/task';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { Task, TaskStatus, TaskPriority } from '@/app/types/props';
 import { useProject } from './ProjectContext';
+import { APIClient } from '@/app/lib/api';
 
-const TaskContext = createContext<TaskContextType | undefined>(undefined);
+interface Column {
+  id: string;
+  title: string;
+  taskIds: string[];
+}
 
-export function TaskProvider({ children }: { children: React.ReactNode }) {
-  const [tasks, setTasks] = useState<{ [key: string]: Task }>({});
-  const [columns, setColumns] = useState<{ [key: string]: Column }>({
-    未着手: {
-      id: '未着手',
-      title: '未着手',
-      taskIds: [],
-    },
-    進行中: {
-      id: '進行中',
-      title: '進行中',
-      taskIds: [],
-    },
-    完了: {
-      id: '完了',
-      title: '完了',
-      taskIds: [],
-    },
-  });
-  const [columnOrder] = useState(['未着手', '進行中', '完了']);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const { updateProjectStatus } = useProject();
-
-  const addTask = (
+interface TaskContextType {
+  tasks: { [key: string]: Task };
+  columns: { [key: string]: Column };
+  columnOrder: string[];
+  selectedTaskId: string | null;
+  addTask: (
     projectId: string,
     title: string,
     description: string,
     assignee: string,
     dueDate: Date,
-    priority: TaskPriority,
-  ) => {
-    if (!projectId || !title) {
-      throw new Error('プロジェクトIDとタイトルは必須です');
+    priority: TaskPriority
+  ) => Promise<void>;
+  updateTask: (
+    id: string,
+    title: string,
+    description: string,
+    assignee: string,
+    dueDate: Date,
+    priority: TaskPriority
+  ) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  moveTask: (taskId: string, fromColumnId: string, toColumnId: string) => Promise<void>;
+  selectTask: (id: string | null) => void;
+  getIncompleteTasksCount: (projectId: string) => number;
+}
+
+const TaskContext = createContext<TaskContextType | undefined>(undefined);
+
+const INITIAL_COLUMNS: { [key: string]: Column } = {
+  'column-1': {
+    id: 'column-1',
+    title: '未着手',
+    taskIds: [],
+  },
+  'column-2': {
+    id: 'column-2',
+    title: '進行中',
+    taskIds: [],
+  },
+  'column-3': {
+    id: 'column-3',
+    title: '完了',
+    taskIds: [],
+  },
+};
+
+const COLUMN_ORDER = ['column-1', 'column-2', 'column-3'];
+
+export function TaskProvider({ children }: { children: React.ReactNode }) {
+  const [tasks, setTasks] = useState<{ [key: string]: Task }>({});
+  const [columns, setColumns] = useState<{ [key: string]: Column }>({
+    'column-1': {
+      id: 'column-1',
+      title: '未着手',
+      taskIds: [],
+    },
+    'column-2': {
+      id: 'column-2',
+      title: '進行中',
+      taskIds: [],
+    },
+    'column-3': {
+      id: 'column-3',
+      title: '完了',
+      taskIds: [],
+    },
+  });
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const { selectedProjectId, updateProjectStatus } = useProject();
+
+  const loadProjectTasks = useCallback(async (projectId: string) => {
+    try {
+      console.log('Loading tasks for project:', projectId);
+      const fetchedTasks = await APIClient.getProjectTasks(projectId);
+      console.log('Fetched tasks:', fetchedTasks);
+      
+      const tasksMap = (fetchedTasks || []).reduce((acc, task) => {
+        acc[task.id] = task;
+        return acc;
+      }, {} as { [key: string]: Task });
+
+      const newColumns: { [key: string]: Column } = {
+        'column-1': { id: 'column-1', title: '未着手', taskIds: [] },
+        'column-2': { id: 'column-2', title: '進行中', taskIds: [] },
+        'column-3': { id: 'column-3', title: '完了', taskIds: [] },
+      };
+
+      if (fetchedTasks && fetchedTasks.length > 0) {
+        fetchedTasks.forEach(task => {
+          const columnId = getColumnIdByStatus(task.status);
+          if (columnId && columnId in newColumns) {
+            newColumns[columnId].taskIds.push(task.id);
+          }
+        });
+      }
+
+      console.log('Setting tasks:', tasksMap);
+      console.log('Setting columns:', newColumns);
+      
+      setTasks(tasksMap);
+      setColumns(newColumns);
+    } catch (error) {
+      console.error('タスクの取得に失敗しました:', error);
+      setTasks({});
+      setColumns({
+        'column-1': { id: 'column-1', title: '未着手', taskIds: [] },
+        'column-2': { id: 'column-2', title: '進行中', taskIds: [] },
+        'column-3': { id: 'column-3', title: '完了', taskIds: [] },
+      } as { [key: string]: Column });
     }
+  }, []);
 
-    if (!TASK_PRIORITIES.includes(priority)) {
-      throw new Error('無効な優先度です');
+  useEffect(() => {
+    if (selectedProjectId) {
+      console.log('Selected project changed:', selectedProjectId);
+      loadProjectTasks(selectedProjectId);
+    } else {
+      setTasks({});
+      setColumns({ ...INITIAL_COLUMNS });
     }
+  }, [selectedProjectId, loadProjectTasks]);
 
-    const now = new Date().toISOString();
-    const newTaskId = `task-${Object.keys(tasks).length + 1}`;
-    const newTask: Task = {
-      id: newTaskId,
-      projectId,
-      title,
-      description,
-      status: '未着手',
-      assignee: {
-        name: assignee,
-      },
-      dueDate: dueDate.toISOString(),
-      priority,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    setTasks({
-      ...tasks,
-      [newTaskId]: newTask,
-    });
-
-    setColumns({
-      ...columns,
-      '未着手': {
-        ...columns['未着手'],
-        taskIds: [...columns['未着手'].taskIds, newTaskId],
-      },
-    });
-
-    updateProjectStatus(projectId, { ...tasks, [newTaskId]: newTask });
+  const getColumnIdByStatus = (status: TaskStatus): string => {
+    switch (status) {
+      case '未着手':
+        return 'column-1';
+      case '進行中':
+        return 'column-2';
+      case '完了':
+        return 'column-3';
+      default:
+        return 'column-1';
+    }
   };
 
-  const updateTask = (
+  const getStatusByColumnId = (columnId: string): TaskStatus => {
+    switch (columnId) {
+      case 'column-1':
+        return '未着手';
+      case 'column-2':
+        return '進行中';
+      case 'column-3':
+        return '完了';
+      default:
+        return '未着手';
+    }
+  };
+
+  const addTask = async (
+    projectId: string,
+    title: string,
+    description: string,
+    assignee: string,
+    dueDate: Date,
+    priority: TaskPriority
+  ) => {
+    try {
+      const newTask = await APIClient.createTask({
+        projectId,
+        title,
+        description,
+        assignee,
+        dueDate,
+        priority,
+      });
+
+      setTasks(prev => ({ ...prev, [newTask.id]: newTask }));
+      setColumns(prev => ({
+        ...prev,
+        'column-1': {
+          ...prev['column-1'],
+          taskIds: [...prev['column-1'].taskIds, newTask.id],
+        },
+      }));
+
+      if (projectId) {
+        updateProjectStatus(projectId, '進行中');
+      }
+    } catch (error) {
+      console.error('タスクの作成に失敗しました:', error);
+      throw error;
+    }
+  };
+
+  const updateTask = async (
     id: string,
     title: string,
     description: string,
@@ -94,150 +204,135 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     dueDate: Date,
     priority: TaskPriority
   ) => {
-    const task = tasks[id];
-    if (!task) {
-      throw new Error('指定されたタスクが見つかりません');
+    try {
+      const updatedTask = await APIClient.updateTask(id, {
+        title,
+        description,
+        assignee: { name: assignee },
+        dueDate: dueDate.toISOString(),
+        priority,
+      });
+
+      setTasks(prev => ({ ...prev, [id]: updatedTask }));
+    } catch (error) {
+      console.error('タスクの更新に失敗しました:', error);
+      throw error;
     }
-
-    if (!title) {
-      throw new Error('タイトルは必須です');
-    }
-
-    if (!TASK_PRIORITIES.includes(priority)) {
-      throw new Error('無効な優先度です');
-    }
-
-    const updatedTask = {
-      ...task,
-      title,
-      description,
-      assignee: { name: assignee },
-      dueDate: dueDate.toISOString(),
-      priority,
-      updatedAt: new Date().toISOString(),
-    };
-
-    setTasks({
-      ...tasks,
-      [id]: updatedTask,
-    });
   };
 
-  const deleteTask = (id: string) => {
-    const { [id]: deletedTask, ...remainingTasks } = tasks;
-    if (!deletedTask) return;
+  const deleteTask = async (id: string) => {
+    try {
+      await APIClient.deleteTask(id);
+      const { [id]: deletedTask, ...remainingTasks } = tasks;
+      setTasks(remainingTasks);
 
-    setTasks(remainingTasks);
+      setColumns(prev => {
+        const newColumns = { ...prev };
+        Object.keys(newColumns).forEach(columnId => {
+          newColumns[columnId] = {
+            ...newColumns[columnId],
+            taskIds: newColumns[columnId].taskIds.filter(taskId => taskId !== id),
+          };
+        });
+        return newColumns;
+      });
 
-    const updatedColumns = Object.entries(columns).reduce(
-      (acc, [columnId, column]) => ({
-        ...acc,
-        [columnId]: {
-          ...column,
-          taskIds: column.taskIds.filter((taskId) => taskId !== id),
-        },
-      }),
-      {}
-    );
+      if (selectedTaskId === id) {
+        setSelectedTaskId(null);
+      }
 
-    setColumns(updatedColumns);
-
-    if (selectedTaskId === id) {
-      setSelectedTaskId(null);
+      if (deletedTask && deletedTask.projectId) {
+        updateProjectStatus(deletedTask.projectId, '未着手');
+      }
+    } catch (error) {
+      console.error('タスクの削除に失敗しました:', error);
+      throw error;
     }
+  };
 
-    updateProjectStatus(deletedTask.projectId, remainingTasks);
+  const moveTask = async (taskId: string, fromColumnId: string | undefined, toColumnId: string) => {
+    try {
+      if (!taskId || !toColumnId) {
+        console.error('Missing required parameters:', { taskId, toColumnId });
+        return;
+      }
+
+      const task = tasks[taskId];
+      if (!task) {
+        console.error('Task not found:', taskId);
+        return;
+      }
+
+      if (!toColumnId.startsWith('column-')) {
+        console.error('Invalid column ID format:', toColumnId);
+        return;
+      }
+
+      const actualFromColumnId = fromColumnId || getColumnIdByStatus(task.status);
+      
+      if (!columns[actualFromColumnId] || !columns[toColumnId]) {
+        console.error('Invalid column ID:', { fromColumnId: actualFromColumnId, toColumnId });
+        return;
+      }
+
+      if (actualFromColumnId === toColumnId) {
+        console.log('Task is already in the target column');
+        return;
+      }
+
+      const newStatus = getStatusByColumnId(toColumnId);
+      const updatedTask = await APIClient.updateTask(taskId, { status: newStatus });
+
+      setTasks(prev => ({ ...prev, [taskId]: updatedTask }));
+      setColumns(prev => {
+        const newColumns = { ...prev };
+        if (newColumns[actualFromColumnId] && newColumns[toColumnId]) {
+          newColumns[actualFromColumnId] = {
+            ...newColumns[actualFromColumnId],
+            taskIds: newColumns[actualFromColumnId].taskIds.filter(id => id !== taskId)
+          };
+          newColumns[toColumnId] = {
+            ...newColumns[toColumnId],
+            taskIds: [...newColumns[toColumnId].taskIds, taskId]
+          };
+        }
+        return newColumns;
+      });
+
+      if (task.projectId) {
+        const projectStatus = calculateProjectStatus(task.projectId);
+        if (projectStatus) {
+          updateProjectStatus(task.projectId, projectStatus);
+        }
+      }
+
+      console.log('Task moved successfully:', {
+        taskId,
+        from: actualFromColumnId,
+        to: toColumnId,
+        newStatus
+      });
+    } catch (error) {
+      console.error('タスクの移動に失敗しました:', error);
+      throw error;
+    }
+  };
+
+  const calculateProjectStatus = (projectId: string): TaskStatus => {
+    const projectTasks = Object.values(tasks).filter(task => task.projectId === projectId);
+    if (projectTasks.length === 0) return '未着手';
+
+    const hasInProgress = projectTasks.some(task => task.status === '進行中');
+    const allCompleted = projectTasks.every(task => task.status === '完了');
+    const allNotStarted = projectTasks.every(task => task.status === '未着手');
+
+    if (allCompleted) return '完了';
+    if (hasInProgress || !allNotStarted) return '進行中';
+    return '未着手';
   };
 
   const selectTask = (id: string | null) => {
     setSelectedTaskId(id);
-  };
-
-  const moveTaskBetweenColumns = (
-    activeId: string,
-    targetColumnId: string,
-    sourceColumnId: string
-  ) => {
-    const updatedTasks = {
-      ...tasks,
-      [activeId]: {
-        ...tasks[activeId],
-        status: targetColumnId as TaskStatus,
-        updatedAt: new Date().toISOString(),
-      },
-    };
-
-    setTasks(updatedTasks);
-    setColumns({
-      ...columns,
-      [sourceColumnId]: {
-        ...columns[sourceColumnId],
-        taskIds: columns[sourceColumnId].taskIds.filter((id) => id !== activeId),
-      },
-      [targetColumnId]: {
-        ...columns[targetColumnId],
-        taskIds: [...columns[targetColumnId].taskIds, activeId],
-      },
-    });
-
-    updateProjectStatus(updatedTasks[activeId].projectId, updatedTasks);
-  };
-
-  const reorderTasksInColumn = (
-    columnId: string,
-    taskId: string,
-    oldIndex: number,
-    newIndex: number
-  ) => {
-    const currentTasks = [...columns[columnId].taskIds];
-    currentTasks.splice(oldIndex, 1);
-    currentTasks.splice(newIndex, 0, taskId);
-
-    setColumns({
-      ...columns,
-      [columnId]: {
-        ...columns[columnId],
-        taskIds: currentTasks,
-      },
-    });
-  };
-
-  const moveTask = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    const targetColumn = columnOrder.find((columnId) => columnId === overId);
-    if (targetColumn) {
-      const sourceColumn = Object.values(columns).find((column) =>
-        column.taskIds.includes(activeId)
-      );
-      if (!sourceColumn) return;
-      
-      moveTaskBetweenColumns(activeId, targetColumn, sourceColumn.id);
-      return;
-    }
-
-    const overTask = tasks[overId];
-    if (overTask) {
-      const targetColumn = Object.values(columns).find((column) =>
-        column.taskIds.includes(overId)
-      );
-      const sourceColumn = Object.values(columns).find((column) =>
-        column.taskIds.includes(activeId)
-      );
-      if (!targetColumn || !sourceColumn) return;
-
-      if (targetColumn.id === sourceColumn.id) {
-        const oldIndex = targetColumn.taskIds.indexOf(activeId);
-        const newIndex = targetColumn.taskIds.indexOf(overId);
-        reorderTasksInColumn(targetColumn.id, activeId, oldIndex, newIndex);
-      } else {
-        moveTaskBetweenColumns(activeId, targetColumn.id, sourceColumn.id);
-      }
-    }
   };
 
   const getIncompleteTasksCount = (projectId: string): number => {
@@ -251,13 +346,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       value={{
         tasks,
         columns,
-        columnOrder,
+        columnOrder: COLUMN_ORDER,
         selectedTaskId,
         addTask,
         updateTask,
         deleteTask,
-        selectTask,
         moveTask,
+        selectTask,
         getIncompleteTasksCount,
       }}
     >
