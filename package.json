@@ -30,7 +30,8 @@
     "api:build": "tsx src/api/index.ts",
     "dev:api": "dotenv -e .env.development -- tsx watch src/api/index.ts",
     "staging:api": "dotenv -e .env.staging -- tsx src/api/index.ts",
-    "prod:api": "dotenv -e .env.production -- tsx src/api/index.ts"
+    "prod:api": "dotenv -e .env.production -- tsx src/api/index.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
