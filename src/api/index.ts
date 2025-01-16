@@ -9,14 +9,19 @@ const app = new Hono()
 
 // ミドルウェアの設定
 app.use('*', logger())
+
+// CORSミドルウェアを認証の前に配置
+app.options('*', cors({
+  origin: ['http://localhost:3000', 'https://dev.optiverse-now.com', 'https://optiverse-now.com'],
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  exposeHeaders: ['Content-Length', 'X-Requested-With'],
+  maxAge: 86400,
+}))
+
 app.use('*', cors({
-  origin: [
-    'http://localhost:3000',
-    'https://dev.optiverse-now.com',
-    'https://optiverse-now.com',
-    'https://api-dev.optiverse-now.com',
-    'https://api.optiverse-now.com',
-  ],
+  origin: ['http://localhost:3000', 'https://dev.optiverse-now.com', 'https://optiverse-now.com'],
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
