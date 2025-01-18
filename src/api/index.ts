@@ -16,11 +16,12 @@ app.onError((err, c) => {
 
 // CORSの設定
 app.use('*', cors({
-  origin: '*',
+  origin: ['http://localhost:3000', 'https://dev.optiverse-now.com', 'https://optiverse-now.com'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
   maxAge: 86400,
+  exposeHeaders: ['Content-Length', 'X-Requested-With']
 }))
 
 app.use('*', logger())
@@ -34,9 +35,10 @@ app.route('/api/users', userRoutes)
 app.get('/api/health', (c) => c.json({ status: 'ok', env: process.env.APP_ENV }))
 
 // Vercel用のハンドラー関数をエクスポート
-export const GET = handle(app)
-export const POST = handle(app)
-export const PUT = handle(app)
-export const DELETE = handle(app)
-export const PATCH = handle(app)
-export const OPTIONS = handle(app)
+const handler = handle(app)
+export const GET = handler
+export const POST = handler
+export const PUT = handler
+export const DELETE = handler
+export const PATCH = handler
+export const OPTIONS = handler
