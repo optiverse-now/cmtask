@@ -2,41 +2,38 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+export const createClient = (request: NextRequest) => {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string) {
+          request.cookies.set(name, value)
+        },
+        remove(name: string) {
+          request.cookies.delete(name)
+        },
+      },
+    }
+  )
+
+  return supabase
+}
+
 // セッションを更新するミドルウェア関数
 export async function updateSession(request: NextRequest) {
   // 次のミドルウェアに渡すレスポンスを作成
-  let supabaseResponse = NextResponse.next({
+  const supabaseResponse = NextResponse.next({
     request,
   });
 
   // Supabaseのサーバークライアントを初期化
   // 環境変数からURLとアノニマスキーを取得
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      // クッキーの操作方法を定義
-      cookies: {
-        // すべてのクッキーを取得
-        getAll() {
-          return request.cookies.getAll();
-        },
-        // クッキーを設定
-        setAll(cookiesToSet) {
-          // リクエストとレスポンスの両方にクッキーを設定
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set({ name, value, ...options }),
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set({ name, value, ...options }),
-          );
-        },
-      },
-    },
-  );
+  const supabase = createClient(request);
 
   // 警告: createServerClientとsupabase.auth.getUser()の間にコードを書かないこと
   // セッション管理に問題が発生する可能性があります
