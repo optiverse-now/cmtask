@@ -26,6 +26,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
+      "methods": ["OPTIONS"],
+      "dest": "/src/api/index.ts"
+    },
+    {
+      "src": "/api/(.*)",
       "dest": "/src/api/index.ts"
     },
     {
