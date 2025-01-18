@@ -1,10 +1,7 @@
 import { Hono } from 'hono'
 import { prisma } from '../lib/prisma'
-import { authMiddleware } from '../middleware/auth'
 
 const app = new Hono()
-
-app.use('/*', authMiddleware)
 
 // プロジェクト一覧の取得
 app.get('/', async (c) => {

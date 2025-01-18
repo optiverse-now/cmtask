@@ -4,8 +4,14 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import projectRoutes from './routes/project'
 import taskRoutes from './routes/task'
-
+import { authMiddleware } from './middleware/auth'
 const app = new Hono()
+
+// グローバルエラーハンドラーを追加
+app.onError((err, c) => {
+  console.error('Unhandled error:', err)
+  return c.json({ error: 'Internal Server Error' }, 500)
+})
 
 // CORSミドルウェアを最初に適用
 app.use('*', cors({
@@ -21,6 +27,9 @@ app.use('*', cors({
 
 // ログミドルウェアの設定
 app.use('*', logger())
+
+// 認証ミドルウェアをAPIルートに適用
+app.use('/api/*', authMiddleware)
 
 // ルートの設定
 app.route('/api/projects', projectRoutes)
