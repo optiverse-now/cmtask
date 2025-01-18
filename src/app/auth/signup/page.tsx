@@ -45,10 +45,14 @@ export default function SignUpPage() {
             }),
           });
 
+          const data = await response.json();
+
           if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create user in database');
+            throw new Error(data.error || 'ユーザー登録に失敗しました');
           }
+
+          // メール確認が必要な場合は確認ページへ
+          router.push('/auth/verify-email');
         } catch (error) {
           console.error('Error creating user:', error);
           if (error instanceof Error) {
@@ -59,9 +63,6 @@ export default function SignUpPage() {
           return;
         }
       }
-
-      // メール確認が必要な場合は確認ページへ
-      router.push('/auth/verify-email');
     } catch (error) {
       console.error('Signup error:', error);
       setError('予期せぬエラーが発生しました。もう一度お試しください。');

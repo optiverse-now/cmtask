@@ -27,7 +27,12 @@ app.post('/', async (c) => {
       return c.json({ error: '認証トークンが無効です' }, 401);
     }
 
-    const { id, email } = await c.req.json();
+    const body = await c.req.json();
+    const { id, email } = body;
+
+    if (!id || !email) {
+      return c.json({ error: 'IDとメールアドレスは必須です' }, 400);
+    }
 
     // トークンのユーザーIDと作成しようとしているユーザーIDが一致することを確認
     if (user.id !== id) {
@@ -41,7 +46,7 @@ app.post('/', async (c) => {
       },
     });
 
-    return c.json(newUser);
+    return c.json(newUser, 201);
   } catch (error) {
     console.error('Error creating user:', error);
     
