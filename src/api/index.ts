@@ -41,8 +41,55 @@ app.use('*', async (c, next) => {
   
   // 認証チェック
   const authHeader = c.req.header('Authorization')
+  console.log('=== Auth Check Start ===')
+  console.log('Path:', c.req.path)
+  console.log('Auth Header:', authHeader ? 'exists' : 'missing')
+  
+  if (authHeader) {
+    const [authType, token] = authHeader.split(' ')
+    console.log('Auth Type:', authType)
+    console.log('Token Length:', token?.length)
+    
+    try {
+      // トークンの形式チェック
+      if (authType !== 'Bearer') {
+        throw new Error('Invalid authorization type')
+      }
+      
+      if (!token) {
+        throw new Error('Token is missing')
+      }
+
+      // トークンの検証に関する詳細なログ
+      console.log('Token Validation:', {
+        path: c.req.path,
+        method: c.req.method,
+        tokenExists: !!token,
+        tokenLength: token.length,
+        requestUserId: new URL(c.req.url).searchParams.get('userId')
+      })
+
+    } catch (error: unknown) {
+      console.error('Token Validation Error:', error instanceof Error ? error.message : 'Unknown error')
+      return c.json({ 
+        error: 'Unauthorized',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        path: c.req.path,
+        method: c.req.method,
+        authType,
+        tokenPresent: !!token
+      }, 401)
+    }
+  }
+
   if (!authHeader && c.req.path !== '/health') {
-    return c.json({ error: 'Authorization header is required' }, 401)
+    console.log('Auth Check Failed: No Authorization header')
+    return c.json({ 
+      error: 'Unauthorized',
+      details: 'Authorization header is required',
+      path: c.req.path,
+      method: c.req.method
+    }, 401)
   }
   
   await next()
