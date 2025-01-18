@@ -12,23 +12,33 @@ export class APIClient {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
-        ...options.headers,
-      },
-      credentials: 'include',
-      mode: 'cors',
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          ...options.headers,
+        },
+        credentials: 'include',
+        mode: 'cors',
+      });
 
-    if (!response.ok) {
-      console.error('API error:', response);
-      throw new Error(`API error: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Fetch error:', error);
+      throw error;
     }
-
-    return response.json();
   }
 
   private static async getCurrentUserId(): Promise<string> {
