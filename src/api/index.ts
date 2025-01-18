@@ -14,8 +14,7 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal Server Error' }, 500)
 })
 
-// CORSの設定
-app.use('*', cors({
+const corsMiddleware = cors({
   origin: [
     'http://localhost:3000',
     'https://dev.optiverse-now.com',
@@ -24,7 +23,21 @@ app.use('*', cors({
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}))
+})
+
+// CORSの設定
+app.use('*', corsMiddleware)
+app.options('*', (c) => {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': c.req.header('Origin') || '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+      'Access-Control-Allow-Credentials': 'true'
+    }
+  })
+})
 
 app.use('*', logger())
 
