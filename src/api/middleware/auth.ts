@@ -8,73 +8,55 @@ declare module 'hono' {
 }
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_URL!,
+  process.env._SUPABASE_ANON_KEY!
 )
 
 export async function authMiddleware(c: Context, next: Next) {
   try {
-    console.log('=== Auth Check Start ===');
-    console.log('Path:', c.req.path);
-    
     const authHeader = c.req.header('Authorization');
-    console.log('Auth Header:', authHeader ? 'exists' : 'missing');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('No valid authorization header');
-      return c.json({ error: 'No valid authorization header' }, 401);
+      console.error('認証ヘッダーが無効です');
+      return c.json({ error: '認証ヘッダーが無効です' }, 401);
     }
 
     const token = authHeader.split(' ')[1];
-    console.log('Token Length:', token.length);
     
-    // JWTの検証とデバッグログの追加
+    if (!token) {
+      console.error('トークンが見つかりません');
+      return c.json({ error: 'トークンが見つかりません' }, 401);
+    }
+
     const { data: { user }, error } = await supabase.auth.getUser(token);
-    console.log('Token Validation:', {
-      path: c.req.path,
-      method: c.req.method,
-      tokenExists: !!token,
-      tokenLength: token.length,
-      error: error?.message
-    });
 
     if (error) {
-      console.error('Token verification error:', error);
+      console.error('トークン検証エラー:', error);
       return c.json({ 
-        error: 'Invalid token', 
-        details: error.message,
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL 
+        error: 'トークンが無効です', 
+        details: error.message
       }, 401);
     }
 
     if (!user) {
-      console.error('No user found for token');
-      return c.json({ error: 'User not found' }, 401);
+      console.error('ユーザーが見つかりません');
+      return c.json({ error: 'ユーザーが見つかりません' }, 401);
     }
 
-    // ユーザーIDをコンテキストに設定
     c.set('userId', user.id);
     
-    // リクエストのユーザーIDとトークンのユーザーIDを比較
     const requestUserId = c.req.query('userId');
     if (requestUserId && requestUserId !== user.id) {
-      console.error('User ID mismatch:', { tokenUserId: user.id, requestUserId });
-      return c.json({ error: 'User ID mismatch' }, 403);
+      console.error('ユーザーIDが一致しません:', { tokenUserId: user.id, requestUserId });
+      return c.json({ error: 'ユーザーIDが一致しません' }, 403);
     }
-
-    console.log('Auth successful:', {
-      userId: user.id,
-      email: user.email,
-      path: c.req.path,
-      method: c.req.method
-    });
 
     await next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    console.error('認証ミドルウェアエラー:', error);
     return c.json({ 
-      error: 'Authentication failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: '認証に失敗しました',
+      details: error instanceof Error ? error.message : '不明なエラー'
     }, 401);
   }
 } 

@@ -6,10 +6,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export class APIClient {
   private static async fetchWithAuth(path: string, options: RequestInit = {}) {
     const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (!session) {
-      throw new Error('Not authenticated');
+    if (sessionError || !session) {
+      console.error('Session error:', sessionError);
+      throw new Error('認証セッションの取得に失敗しました');
+    }
+
+    if (!session.access_token) {
+      console.error('Access token is missing');
+      throw new Error('アクセストークンが見つかりません');
     }
 
     try {
@@ -25,13 +31,13 @@ export class APIClient {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
+        const errorData = await response.json().catch(() => null);
         console.error('API error:', {
           status: response.status,
           statusText: response.statusText,
-          error: errorText
+          error: errorData
         });
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        throw new Error(`API error: ${response.status}`);
       }
 
       return response.json();
