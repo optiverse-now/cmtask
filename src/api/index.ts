@@ -1,11 +1,11 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
-import { handle } from '@hono/node-server/vercel'
+import { handle } from 'hono/vercel'
 import projectRoutes from './routes/project.js'
 import taskRoutes from './routes/task.js'
 import userRoutes from './routes/user.js'
 
-const app = new Hono()
+const app = new Hono().basePath('/api')
 
 // グローバルエラーハンドラー
 app.onError((err, c) => {
@@ -40,18 +40,19 @@ app.use('*', async (c, next) => {
 app.use('*', logger())
 
 // APIルート
-app.route('/api/projects', projectRoutes)
-app.route('/api/tasks', taskRoutes)
-app.route('/api/users', userRoutes)
+app.route('/projects', projectRoutes)
+app.route('/tasks', taskRoutes)
+app.route('/users', userRoutes)
 
 // ヘルスチェック
-app.get('/api/health', (c) => c.json({ status: 'ok', env: process.env.APP_ENV }))
+app.get('/health', (c) => c.json({ status: 'ok', env: process.env.APP_ENV }))
 
-// Vercel用のハンドラー関数をエクスポート
 const handler = handle(app)
-export const GET = handler
-export const POST = handler
-export const PUT = handler
-export const DELETE = handler
-export const PATCH = handler
-export const OPTIONS = handler
+export { 
+  handler as GET,
+  handler as POST,
+  handler as PUT,
+  handler as DELETE,
+  handler as PATCH,
+  handler as OPTIONS
+}
