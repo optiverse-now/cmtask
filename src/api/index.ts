@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import projectRoutes from './routes/project'
-import taskRoutes from './routes/task'
-import userRoutes from './routes/user'
+import projectRoutes from './routes/project.js'
+import taskRoutes from './routes/task.js'
+import userRoutes from './routes/user.js'
 
 const app = new Hono()
 
