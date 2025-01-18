@@ -1,12 +1,8 @@
 import { Hono } from 'hono'
 import { prisma } from '../lib/prisma'
 import type { Prisma } from '@prisma/client'
-import { authMiddleware } from '../middleware/auth'
 
 const app = new Hono()
-
-app.use('/*', authMiddleware)
-
 // プロジェクトに紐づくタスク一覧の取得
 app.get('/project/:projectId', async (c) => {
   try {
