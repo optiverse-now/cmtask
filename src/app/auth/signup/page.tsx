@@ -15,18 +15,56 @@ export default function SignUpPage() {
     e.preventDefault();
     setError(null);
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
-    });
+    try {
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        },
+      });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      router.push("/auth/verify-email");
+      if (signUpError) {
+        console.error('Signup error:', signUpError);
+        setError(signUpError.message);
+        return;
+      }
+
+      // Supabaseの認証が成功したら、Prismaのユーザーテーブルにも登録
+      if (authData.user) {
+        try {
+          const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authData.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              id: authData.user.id,
+              email: authData.user.email,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create user in database');
+          }
+        } catch (error) {
+          console.error('Error creating user:', error);
+          if (error instanceof Error) {
+            setError(error.message);
+          } else {
+            setError('ユーザー登録に失敗しました。');
+          }
+          return;
+        }
+      }
+
+      // メール確認が必要な場合は確認ページへ
+      router.push('/auth/verify-email');
+    } catch (error) {
+      console.error('Signup error:', error);
+      setError('予期せぬエラーが発生しました。もう一度お試しください。');
     }
   };
 

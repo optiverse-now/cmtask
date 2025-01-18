@@ -1,19 +1,19 @@
-import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import projectRoutes from './routes/project.js'
-import taskRoutes from './routes/task.js'
-import { authMiddleware } from './middleware/auth.js'
+import projectRoutes from './routes/project'
+import taskRoutes from './routes/task'
+import userRoutes from './routes/user'
+
 const app = new Hono()
 
-// グローバルエラーハンドラーを追加
+// グローバルエラーハンドラー
 app.onError((err, c) => {
   console.error('Unhandled error:', err)
   return c.json({ error: 'Internal Server Error' }, 500)
 })
 
-// CORSミドルウェアを最初に適用
+// CORSの設定
 app.use('*', cors({
   origin: [
     'http://localhost:3000',
@@ -25,23 +25,14 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }))
 
-// ログミドルウェアの設定
 app.use('*', logger())
 
-// 認証ミドルウェアをAPIルートに適用
-app.use('/api/*', authMiddleware)
-
-// ルートの設定
+// APIルート
 app.route('/api/projects', projectRoutes)
 app.route('/api/tasks', taskRoutes)
+app.route('/api/users', userRoutes)
 
 // ヘルスチェック
 app.get('/health', (c) => c.json({ status: 'ok', env: process.env.APP_ENV }))
 
-// サーバーの起動
-const port = process.env.API_PORT || 8000
-
-serve({
-  fetch: app.fetch,
-  port: Number(port),
-})
+export default app
