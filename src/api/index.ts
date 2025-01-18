@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
-import { cors } from 'hono/cors'
 import { handle } from '@hono/node-server/vercel'
 import projectRoutes from './routes/project.js'
 import taskRoutes from './routes/task.js'
@@ -14,15 +13,29 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal Server Error' }, 500)
 })
 
+// プリフライトリクエストの処理
+app.options('*', (c) => {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': c.req.header('Origin') || 'https://dev.optiverse-now.com',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Max-Age': '86400'
+    }
+  })
+})
+
 // CORSの設定
-app.use('*', cors({
-  origin: ['http://localhost:3000', 'https://dev.optiverse-now.com', 'https://optiverse-now.com'],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true,
-  maxAge: 86400,
-  exposeHeaders: ['Content-Length', 'X-Requested-With']
-}))
+app.use('*', async (c, next) => {
+  const origin = c.req.header('Origin') || 'https://dev.optiverse-now.com'
+  c.header('Access-Control-Allow-Origin', origin)
+  c.header('Access-Control-Allow-Credentials', 'true')
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+  await next()
+})
 
 app.use('*', logger())
 
