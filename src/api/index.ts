@@ -2,9 +2,9 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import projectRoutes from './routes/project'
-import taskRoutes from './routes/task'
-import { authMiddleware } from './middleware/auth'
+import projectRoutes from './routes/project.js'
+import taskRoutes from './routes/task.js'
+import { authMiddleware } from './middleware/auth.js'
 const app = new Hono()
 
 // グローバルエラーハンドラーを追加
