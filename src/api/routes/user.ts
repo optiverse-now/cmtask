@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { prisma } from '../lib/prisma';
+import { prisma } from '../lib/prisma.js';
 import { authMiddleware } from '../middleware/auth';
 import { createClient } from '@supabase/supabase-js';
 import { Prisma } from '@prisma/client';
