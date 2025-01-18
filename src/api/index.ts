@@ -4,6 +4,7 @@ import { logger } from 'hono/logger'
 import projectRoutes from './routes/project.js'
 import taskRoutes from './routes/task.js'
 import userRoutes from './routes/user.js'
+import { handle } from '@hono/node-server/vercel'
 
 const app = new Hono()
 
@@ -35,4 +36,10 @@ app.route('/api/users', userRoutes)
 // ヘルスチェック
 app.get('/health', (c) => c.json({ status: 'ok', env: process.env.APP_ENV }))
 
-export default app
+// Vercel用のハンドラー関数をエクスポート
+export const GET = handle(app)
+export const POST = handle(app)
+export const PUT = handle(app)
+export const DELETE = handle(app)
+export const PATCH = handle(app)
+export const OPTIONS = handle(app)
