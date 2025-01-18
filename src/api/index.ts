@@ -24,7 +24,8 @@ app.options('*', (c) => {
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
       'Access-Control-Allow-Credentials': 'true',
-      'Access-Control-Max-Age': '86400'
+      'Access-Control-Max-Age': '86400',
+      'Access-Control-Expose-Headers': 'Authorization'
     }
   })
 })
@@ -36,6 +37,14 @@ app.use('*', async (c, next) => {
   c.header('Access-Control-Allow-Credentials', 'true')
   c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+  c.header('Access-Control-Expose-Headers', 'Authorization')
+  
+  // 認証チェック
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader && c.req.path !== '/health') {
+    return c.json({ error: 'Authorization header is required' }, 401)
+  }
+  
   await next()
 })
 
