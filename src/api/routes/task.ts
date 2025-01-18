@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { prisma } from '../lib/prisma'
+import { prisma } from '../lib/prisma.js'
 import type { Prisma } from '@prisma/client'
 
 const app = new Hono()
