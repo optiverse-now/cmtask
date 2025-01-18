@@ -20,6 +20,7 @@ export class APIClient {
         ...options.headers,
       },
       credentials: 'include',
+      mode: 'cors',
     });
 
     if (!response.ok) {

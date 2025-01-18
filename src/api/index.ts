@@ -1,5 +1,4 @@
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { handle } from '@hono/node-server/vercel'
 import projectRoutes from './routes/project.js'
@@ -15,17 +14,31 @@ app.onError((err, c) => {
 })
 
 // CORSの設定
-const corsMiddleware = cors({
-  origin: ['http://localhost:3000', 'https://dev.optiverse-now.com', 'https://optiverse-now.com'],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true,
-  exposeHeaders: ['Content-Length', 'X-Requested-With'],
-  maxAge: 3600,
+app.use('*', async (c, next) => {
+  const origin = c.req.header('Origin')
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://dev.optiverse-now.com',
+    'https://optiverse-now.com',
+    'https://api-dev.optiverse-now.com'
+  ]
+
+  if (origin && allowedOrigins.includes(origin)) {
+    c.header('Access-Control-Allow-Origin', origin)
+    c.header('Access-Control-Allow-Credentials', 'true')
+    c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+    c.header('Access-Control-Max-Age', '86400')
+
+    // プリフライトリクエストの場合
+    if (c.req.method === 'OPTIONS') {
+      return new Response(null, { status: 204 })
+    }
+  }
+
+  await next()
 })
 
-app.use('*', corsMiddleware)
-app.options('*', () => new Response(null, { status: 204 }))
 app.use('*', logger())
 
 // APIルート

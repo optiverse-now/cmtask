@@ -26,8 +26,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "methods": ["OPTIONS"],
-      "dest": "/src/api/index.ts"
+      "headers": {
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "86400"
+      },
+      "continue": true
     },
     {
       "src": "/api/(.*)",
