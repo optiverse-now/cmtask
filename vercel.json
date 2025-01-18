@@ -9,7 +9,12 @@
       "src": "src/api/index.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["src/api/**/*.ts"],
+        "includeFiles": [
+          "src/api/**/*.ts",
+          "src/api/**/*.js",
+          "prisma/**/*",
+          "package.json"
+        ],
         "nodeVersion": "20.x"
       }
     },
