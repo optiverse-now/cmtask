@@ -9,7 +9,13 @@ declare module 'hono' {
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env._SUPABASE_ANON_KEY!
+  process.env.SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
 )
 
 export async function authMiddleware(c: Context, next: Next) {
