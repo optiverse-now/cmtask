@@ -5,6 +5,8 @@ import projectRoutes from './routes/project.js'
 import taskRoutes from './routes/task.js'
 import userRoutes from './routes/user.js'
 
+export const runtime = 'edge'
+
 const app = new Hono().basePath('/api')
 
 // グローバルエラーハンドラー
