@@ -26,13 +26,12 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/src/api/index.ts",
-      "headers": {
-        "Access-Control-Allow-Origin": "https://dev.optiverse-now.com",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Requested-With",
-        "Access-Control-Allow-Credentials": "true"
-      }
+      "methods": ["OPTIONS"],
+      "dest": "/src/api/index.ts"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/src/api/index.ts"
     },
     {
       "src": "/(.*)",
