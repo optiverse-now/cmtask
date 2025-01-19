@@ -14,36 +14,46 @@ export async function middleware(request: NextRequest) {
     // Supabaseクライアントの作成
     const supabase = createMiddlewareClient({ req: request, res })
     
-    // セッションの取得
+    // セッションの取得と有効性確認
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession()
 
     if (sessionError) {
+      console.error('Session error:', sessionError)
       throw sessionError
     }
 
     const pathname = request.nextUrl.pathname
 
-    // 認証ページにいる場合、すでにログインしていればアプリケーションページにリダイレクト
+    // 認証ページにいる場合の処理
     if (authRoutes.some(route => pathname.startsWith(route))) {
-      if (session) {
+      if (session?.user) {
         return NextResponse.redirect(new URL('/applications/taskmaker', request.url))
       }
       return res
     }
 
-    // 保護されたルートへのアクセスで未認証の場合
+    // 保護されたルートへのアクセス処理
     if (protectedRoutes.some(route => pathname.startsWith(route))) {
-      if (!session) {
-        // リダイレクト用URLの作成
+      // セッションが存在しない、または無効な場合
+      if (!session?.user || !session?.access_token) {
+        console.warn('Unauthorized access attempt to:', pathname)
         const redirectUrl = new URL('/auth/login', request.url)
-        // 現在のURLをリダイレクト後のパラメータとして追加
         redirectUrl.searchParams.set('redirectTo', pathname)
         return NextResponse.redirect(redirectUrl)
       }
-      return res
+      
+      // セッションの有効性を確認
+      const { data: { user }, error: userError } = await supabase.auth.getUser(session.access_token)
+      
+      if (userError || !user) {
+        console.warn('Invalid session detected:', userError)
+        const redirectUrl = new URL('/auth/login', request.url)
+        redirectUrl.searchParams.set('redirectTo', pathname)
+        return NextResponse.redirect(redirectUrl)
+      }
     }
 
     // セッションの更新
@@ -53,7 +63,6 @@ export async function middleware(request: NextRequest) {
 
     return res
   } catch (error) {
-    // エラーが発生した場合は、安全のためログインページにリダイレクト
     console.error('Middleware error:', error)
     const redirectUrl = new URL('/auth/login', request.url)
     return NextResponse.redirect(redirectUrl)
