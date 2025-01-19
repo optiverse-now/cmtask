@@ -8,64 +8,64 @@ const authRoutes = ['/auth/login', '/auth/signup']
 
 export async function middleware(request: NextRequest) {
   try {
-    // レスポンスの作成
     const res = NextResponse.next()
-    
-    // Supabaseクライアントの作成
     const supabase = createMiddlewareClient({ req: request, res })
     
-    // セッションの取得と有効性確認
+    // セッションの取得
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession()
-
-    if (sessionError) {
-      console.error('Session error:', sessionError)
-      throw sessionError
-    }
 
     const pathname = request.nextUrl.pathname
 
     // 認証ページにいる場合の処理
     if (authRoutes.some(route => pathname.startsWith(route))) {
       if (session?.user) {
-        return NextResponse.redirect(new URL('/applications/taskmaker', request.url))
+        // 認証済みの場合は、リダイレクト先のパラメータがあればそこに、なければtaskmakerに遷移
+        const redirectTo = request.nextUrl.searchParams.get('redirectTo')
+        const redirectUrl = redirectTo || '/applications/taskmaker'
+        return NextResponse.redirect(new URL(redirectUrl, request.url))
       }
       return res
     }
 
     // 保護されたルートへのアクセス処理
     if (protectedRoutes.some(route => pathname.startsWith(route))) {
-      // セッションが存在しない、または無効な場合
-      if (!session?.user || !session?.access_token) {
-        console.warn('Unauthorized access attempt to:', pathname)
+      if (!session?.user) {
+        // 未認証の場合は、現在のURLをリダイレクト先として保存
         const redirectUrl = new URL('/auth/login', request.url)
         redirectUrl.searchParams.set('redirectTo', pathname)
         return NextResponse.redirect(redirectUrl)
       }
-      
-      // セッションの有効性を確認
-      const { data: { user }, error: userError } = await supabase.auth.getUser(session.access_token)
-      
-      if (userError || !user) {
-        console.warn('Invalid session detected:', userError)
-        const redirectUrl = new URL('/auth/login', request.url)
-        redirectUrl.searchParams.set('redirectTo', pathname)
-        return NextResponse.redirect(redirectUrl)
-      }
-    }
 
-    // セッションの更新
-    if (session) {
-      res.headers.set('x-middleware-cache', 'no-cache')
+      // セッションエラーがある場合
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        const redirectUrl = new URL('/auth/login', request.url)
+        redirectUrl.searchParams.set('redirectTo', pathname)
+        return NextResponse.redirect(redirectUrl)
+      }
+
+      // アクセストークンの有効期限をチェック
+      if (session.expires_at) {
+        const expiresAt = new Date(session.expires_at * 1000)
+        const now = new Date()
+        
+        if (expiresAt <= now) {
+          console.warn('Session expired')
+          const redirectUrl = new URL('/auth/login', request.url)
+          redirectUrl.searchParams.set('redirectTo', pathname)
+          return NextResponse.redirect(redirectUrl)
+        }
+      }
     }
 
     return res
   } catch (error) {
     console.error('Middleware error:', error)
-    const redirectUrl = new URL('/auth/login', request.url)
-    return NextResponse.redirect(redirectUrl)
+    // エラーが発生した場合は、安全のためログインページにリダイレクト
+    return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 }
 
@@ -80,6 +80,6 @@ export const config = {
      * - public (public files)
      * - api (API routes)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|api).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 }

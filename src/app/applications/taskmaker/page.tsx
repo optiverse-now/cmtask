@@ -27,16 +27,32 @@ export default function TaskMakerPage() {
     const checkAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
-        // セッションチェックの結果、未認証の場合のみリダイレクト
-        if (!session && isSubscribed) {
-          router.push('/auth/login');
+
+        if (error) {
+          console.error('セッション取得エラー:', error);
+          if (isSubscribed) {
+            router.replace('/auth/login');
+          }
           return;
         }
 
-        // エラーがあっても即座にリダイレクトせず、セッションの存在を優先
-        if (error) {
-          console.warn('セッション取得時の警告:', error);
+        if (!session?.user) {
+          if (isSubscribed) {
+            router.replace('/auth/login');
+          }
+          return;
+        }
+
+        // セッションの有効期限をチェック
+        if (session.expires_at) {
+          const expiresAt = new Date(session.expires_at * 1000);
+          const now = new Date();
+          
+          if (expiresAt <= now && isSubscribed) {
+            console.warn('セッションの有効期限が切れています');
+            router.replace('/auth/login');
+            return;
+          }
         }
 
         if (isSubscribed) {
@@ -44,23 +60,21 @@ export default function TaskMakerPage() {
         }
       } catch (error) {
         console.error('認証チェックエラー:', error);
-        // 重大なエラーの場合のみリダイレクト
-        if (isSubscribed && error instanceof Error && error.message.includes('fatal')) {
-          router.push('/auth/login');
+        if (isSubscribed) {
+          router.replace('/auth/login');
         }
       }
     };
 
-    // 初回認証チェック
     checkAuth();
 
-    // セッションの変更を監視
     const {
       data: { subscription: authListener }
-    } = supabase.auth.onAuthStateChange((event) => {
-      console.log('authListener', event);
-      if (event === 'SIGNED_OUT' && isSubscribed) {
-        router.push('/auth/login');
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session || event === 'SIGNED_OUT') {
+        if (isSubscribed) {
+          router.replace('/auth/login');
+        }
       }
     });
 
