@@ -17,28 +17,46 @@ export async function middleware(request: NextRequest) {
     // セッションの取得
     const {
       data: { session },
+      error: sessionError,
     } = await supabase.auth.getSession()
+
+    if (sessionError) {
+      throw sessionError
+    }
 
     const pathname = request.nextUrl.pathname
 
     // 認証ページにいる場合、すでにログインしていればアプリケーションページにリダイレクト
-    if (authRoutes.some(route => pathname.startsWith(route)) && session) {
-      return NextResponse.redirect(new URL('/applications/taskmaker', request.url))
+    if (authRoutes.some(route => pathname.startsWith(route))) {
+      if (session) {
+        return NextResponse.redirect(new URL('/applications/taskmaker', request.url))
+      }
+      return res
     }
 
     // 保護されたルートへのアクセスで未認証の場合
-    if (protectedRoutes.some(route => pathname.startsWith(route)) && !session) {
-      // リダイレクト用URLの作成
-      const redirectUrl = new URL('/auth/login', request.url)
-      redirectUrl.searchParams.set('redirectTo', pathname)
-      return NextResponse.redirect(redirectUrl)
+    if (protectedRoutes.some(route => pathname.startsWith(route))) {
+      if (!session) {
+        // リダイレクト用URLの作成
+        const redirectUrl = new URL('/auth/login', request.url)
+        // 現在のURLをリダイレクト後のパラメータとして追加
+        redirectUrl.searchParams.set('redirectTo', pathname)
+        return NextResponse.redirect(redirectUrl)
+      }
+      return res
+    }
+
+    // セッションの更新
+    if (session) {
+      res.headers.set('x-middleware-cache', 'no-cache')
     }
 
     return res
   } catch (error) {
     // エラーが発生した場合は、安全のためログインページにリダイレクト
     console.error('Middleware error:', error)
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+    const redirectUrl = new URL('/auth/login', request.url)
+    return NextResponse.redirect(redirectUrl)
   }
 }
 
@@ -51,7 +69,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public (public files)
+     * - api (API routes)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api).*)',
   ],
 }
