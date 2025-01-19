@@ -5,91 +5,77 @@ import type { NextRequest } from 'next/server'
 
 // ミドルウェア関数 - すべてのリクエストの前に実行される
 export async function middleware(request: NextRequest) {
-  // デバッグ用：middlewareが実行されているか確認
-  throw new Error(`Middleware executed for path: ${request.nextUrl.pathname}`)
+  try {
+    // 現在のURLを取得
+    const url = new URL(request.url)
+    console.log('Middleware executing for:', url.pathname)
 
-  // 次のミドルウェアに渡すレスポンスオブジェクトを作成
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
+    // 次のミドルウェアに渡すレスポンスオブジェクトを作成
+    const response = NextResponse.next()
 
-  // デバッグ用のヘッダーを追加
-  response.headers.set('x-middleware-cache', 'no-cache')
-  response.headers.set('x-middleware-path', request.nextUrl.pathname)
+    // Supabaseのサーバークライアントを初期化
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove(name: string, options: CookieOptions) {
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+              maxAge: 0,
+            })
+          },
+        },
+      }
+    )
 
-  // Supabaseのサーバークライアントを初期化
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      // クッキーの操作方法を定義
-      cookies: {
-        get(name: string) {
-          const cookie = request.cookies.get(name)
-          // デバッグ用のヘッダーにCookie情報を追加
-          response.headers.set(`x-debug-cookie-${name}`, cookie?.value || 'not-found')
-          return cookie?.value
-        },
-        // クッキーの設定 - 名前、値、オプションを指定してクッキーを設定
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        // クッキーの削除 - 指定されたクッキーを無効化（maxAge=0に設定）
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-            maxAge: 0,
-          })
-        },
-      },
+    // セッション情報を取得
+    const { data: { session } } = await supabase.auth.getSession()
+
+    // 保護されたルートへのアクセスチェック
+    if (url.pathname.startsWith('/applications')) {
+      if (!session) {
+        // 未認証の場合、ログインページへリダイレクト
+        return NextResponse.redirect(new URL('/auth/login', request.url))
+      }
     }
-  )
 
-  // 現在のセッション情報を取得（認証状態の確認）
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  // セッション状態をヘッダーに追加
-  response.headers.set('x-middleware-session', session ? 'authenticated' : 'not-authenticated')
+    // 認証済みユーザーのログインページアクセスチェック
+    if (url.pathname === '/auth/login' && session) {
+      // 認証済みの場合、アプリケーションページへリダイレクト
+      return NextResponse.redirect(new URL('/applications/taskmaker', request.url))
+    }
 
-  console.log('Full session data:', session)
-  console.log('Current path:', request.nextUrl.pathname)
-  console.log('Session status:', session ? 'Authenticated' : 'Not authenticated')
-  console.log('Request URL:', request.url)
-  console.log('All Cookies:', request.cookies.getAll())
-
-  if (!session) {
-    console.log('No session detected, should redirect to login')
-    const redirectUrl = new URL('/auth/login', request.url)
-    response.headers.set('x-middleware-redirect', redirectUrl.toString())
-    return NextResponse.redirect(redirectUrl)
+    return response
+  } catch (error) {
+    console.error('Middleware error:', error)
+    // エラーが発生した場合でもレスポンスを返す
+    return NextResponse.next()
   }
-
-  // 認証済みで /auth/login にアクセスした場合は /applications/taskmaker にリダイレクト
-  if (request.nextUrl.pathname === '/auth/login') {
-    const redirectUrl = new URL('/applications/taskmaker', request.url)
-    response.headers.set('x-middleware-redirect', redirectUrl.toString())
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // 処理済みのレスポンスを返す
-  return response
 }
 
 // ミドルウェアの設定
 export const config = {
   matcher: [
-    // 認証が必要なパス
-    '/applications/:path*',
-    '/applications',
-    '/auth/:path*',
-    '/auth',
-  ]
+    /*
+     * 以下を除く全てのパスにマッチ:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 }
