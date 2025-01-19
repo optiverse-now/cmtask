@@ -6,16 +6,17 @@ import type { NextRequest } from 'next/server'
 // ミドルウェア関数 - すべてのリクエストの前に実行される
 export async function middleware(request: NextRequest) {
   // 次のミドルウェアに渡すレスポンスオブジェクトを作成
-  // リクエストヘッダーを維持したまま新しいレスポンスを生成
   const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
 
+  // デバッグ用のヘッダーを追加
+  response.headers.set('x-middleware-cache', 'no-cache')
+  response.headers.set('x-middleware-path', request.nextUrl.pathname)
+
   // Supabaseのサーバークライアントを初期化
-  console.log('Middleware is executing for path:', request.nextUrl.pathname)
-  
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -24,7 +25,8 @@ export async function middleware(request: NextRequest) {
       cookies: {
         get(name: string) {
           const cookie = request.cookies.get(name)
-          console.log(`Cookie ${name}:`, cookie?.value)
+          // デバッグ用のヘッダーにCookie情報を追加
+          response.headers.set(`x-debug-cookie-${name}`, cookie?.value || 'not-found')
           return cookie?.value
         },
         // クッキーの設定 - 名前、値、オプションを指定してクッキーを設定
@@ -51,6 +53,9 @@ export async function middleware(request: NextRequest) {
   // 現在のセッション情報を取得（認証状態の確認）
   const { data: { session } } = await supabase.auth.getSession()
   
+  // セッション状態をヘッダーに追加
+  response.headers.set('x-middleware-session', session ? 'authenticated' : 'not-authenticated')
+
   console.log('Full session data:', session)
   console.log('Current path:', request.nextUrl.pathname)
   console.log('Session status:', session ? 'Authenticated' : 'Not authenticated')
@@ -60,13 +65,15 @@ export async function middleware(request: NextRequest) {
   if (!session) {
     console.log('No session detected, should redirect to login')
     const redirectUrl = new URL('/auth/login', request.url)
-    console.log('Redirect URL:', redirectUrl.toString())
+    response.headers.set('x-middleware-redirect', redirectUrl.toString())
     return NextResponse.redirect(redirectUrl)
   }
 
   // 認証済みで /auth/login にアクセスした場合は /applications/taskmaker にリダイレクト
   if (request.nextUrl.pathname === '/auth/login') {
-    return NextResponse.redirect(new URL('/applications/taskmaker', request.url))
+    const redirectUrl = new URL('/applications/taskmaker', request.url)
+    response.headers.set('x-middleware-redirect', redirectUrl.toString())
+    return NextResponse.redirect(redirectUrl)
   }
 
   // 処理済みのレスポンスを返す
