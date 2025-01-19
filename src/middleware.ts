@@ -48,8 +48,12 @@ export async function middleware(request: NextRequest) {
 
   // 現在のセッション情報を取得（認証状態の確認）
   const { data: { session } } = await supabase.auth.getSession()
+  
+  console.log('Current path:', request.nextUrl.pathname)
+  console.log('Session status:', session ? 'Authenticated' : 'Not authenticated')
 
   if (!session) {
+    console.log('Redirecting to login due to no session')
     // 未認証の場合は /auth/login にリダイレクト
     const redirectUrl = new URL('/auth/login', request.url)
     return NextResponse.redirect(redirectUrl)
@@ -67,15 +71,8 @@ export async function middleware(request: NextRequest) {
 
 // ミドルウェアの設定
 export const config = {
-  // どのパスでミドルウェアを実行するかを指定
   matcher: [
-    /*
-     * 以下で始まるパス以外のすべてのリクエストパスに対してミドルウェアを実行:
-     * - _next/static (静的ファイル)
-     * - _next/image (画像最適化ファイル)
-     * - favicon.ico (ファビコン)
-     * 必要に応じてこのパターンを修正して、より多くのパスを含めることができます。
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/applications/:path*',  // applicationsディレクトリ配下のすべてのパス
+    '/auth/:path*',         // authディレクトリ配下のすべてのパス
   ],
 }
