@@ -8,7 +8,13 @@ export async function middleware(request: NextRequest) {
   try {
     // 現在のURLを取得
     const url = new URL(request.url)
-    console.log('Middleware executing for:', url.pathname)
+    
+    // Edge Runtimeでより確実にログを出力
+    console.warn('=== Middleware Debug ===')
+    console.warn(`Path: ${url.pathname}`)
+    console.warn(`Timestamp: ${new Date().toISOString()}`)
+    console.warn(`Headers: ${JSON.stringify([...request.headers.entries()])}`)
+    console.warn('========================')
 
     // 次のミドルウェアに渡すレスポンスオブジェクトを作成
     const response = NextResponse.next()
@@ -43,6 +49,13 @@ export async function middleware(request: NextRequest) {
 
     // セッション情報を取得
     const { data: { session } } = await supabase.auth.getSession()
+
+    // セッション情報のデバッグ
+    console.warn('=== Session Debug ===')
+    console.warn(`Session exists: ${!!session}`)
+    console.warn(`User ID: ${session?.user?.id || 'none'}`)
+    console.warn(`Email: ${session?.user?.email || 'none'}`)
+    console.warn('===================')
 
     // 保護されたルートへのアクセスチェック
     if (url.pathname.startsWith('/applications')) {
