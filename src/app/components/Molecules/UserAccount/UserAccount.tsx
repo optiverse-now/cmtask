@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { CreditCard, LogOut, Settings, User, Bell, Crown } from 'lucide-react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/server'
 import { useRouter } from 'next/navigation'
 
 import {
@@ -28,14 +28,13 @@ interface UserAccountProps {
 }
 
 export function UserAccount({ user }: UserAccountProps) {
-  const supabase = createClientComponentClient();
   const router = useRouter();
   
   // ログアウトの処理を改善
   const logOut = async () => {
     try {
-      // すべてのCookieとローカルストレージをクリア
-      const { error } = await supabase.auth.signOut({
+      const client = await createClient()
+      const { error } = await client.auth.signOut({
         scope: 'global'
       });
       

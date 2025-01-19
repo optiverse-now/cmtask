@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr'
+import { AuthChangeEvent } from '@supabase/supabase-js'
 import TaskBoard from '@/app/components/features/task/TaskBoard';
 import CreateTaskModal from '@/app/components/features/task/CreateTaskModal';
 import { useProject } from '@/app/contexts/ProjectContext';
@@ -13,7 +14,10 @@ import LeftSidebar from '@/app/components/Organisms/Sidebar/LeftSidebar';
 
 export default function TaskMakerPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const { selectedProjectId, completeProject, getSelectedProject, projects, selectProject, addProject } = useProject();
   const { selectedTaskId, moveTask, selectTask } = useTask();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -25,7 +29,7 @@ export default function TaskMakerPage() {
     // 認証状態の変更のみを監視
     const {
       data: { subscription: authListener }
-    } = supabase.auth.onAuthStateChange((event) => {
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
       if (event === 'SIGNED_OUT') {
         router.push('/auth/login');
       }
