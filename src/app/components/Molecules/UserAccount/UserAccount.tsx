@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { CreditCard, LogOut, Settings, User, Bell, Crown } from 'lucide-react'
-import { createClient } from '@/utils/supabase/client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter } from 'next/navigation'
 
 import {
   DropdownMenu,
@@ -27,19 +28,32 @@ interface UserAccountProps {
 }
 
 export function UserAccount({ user }: UserAccountProps) {
-  const supabase = createClient();
+  const supabase = createClientComponentClient();
+  const router = useRouter();
   
-  // ログアウトの処理を追加
+  // ログアウトの処理を改善
   const logOut = async () => {
     try {
-      // supabaseに用意されているログアウトの関数
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      // すべてのCookieとローカルストレージをクリア
+      const { error } = await supabase.auth.signOut({
+        scope: 'global'
+      });
+      
+      if (error) throw error;
 
-      // ログアウト後に認証画面に強制的にリダイレクト
-      window.location.href = '/auth/login'
+      // ブラウザのストレージをクリア
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // ログアウト後にページをリロードして認証状態を完全にリセット
+      router.refresh();
+      
+      // ログインページにリダイレクト
+      router.replace('/auth/login');
     } catch (error) {
-      console.error('ログアウトエラー:', error)
+      console.error('ログアウトエラー:', error);
+      // エラーが発生しても、安全のためログインページにリダイレクト
+      router.replace('/auth/login');
     }
   }
 
@@ -86,8 +100,7 @@ export function UserAccount({ user }: UserAccountProps) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logOut}>
-          <LogOut
-            className="mr-2 size-4"/>
+          <LogOut className="mr-2 size-4"/>
           ログアウト
         </DropdownMenuItem>
       </DropdownMenuContent>
