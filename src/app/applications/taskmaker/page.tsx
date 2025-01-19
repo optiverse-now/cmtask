@@ -22,37 +22,19 @@ export default function TaskMakerPage() {
   const selectedProject = getSelectedProject();
 
   useEffect(() => {
-    let isSubscribed = true;
-
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (isSubscribed) {
-          if (!session) {
-            router.replace('/auth/login');
-          }
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('セッション確認エラー:', error);
-        if (isSubscribed) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    checkSession();
-
+    // 認証状態の変更のみを監視
     const {
       data: { subscription: authListener }
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        router.replace('/auth/login');
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        router.push('/auth/login');
       }
     });
 
+    // 初期ローディング状態を解除
+    setIsLoading(false);
+
     return () => {
-      isSubscribed = false;
       authListener?.unsubscribe();
     };
   }, [router, supabase]);
