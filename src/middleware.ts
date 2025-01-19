@@ -11,10 +11,8 @@ export async function middleware(request: NextRequest) {
     const res = NextResponse.next()
     const supabase = createMiddlewareClient({ req: request, res })
     
-    // セッションの取得
     const {
       data: { session },
-      error: sessionError,
     } = await supabase.auth.getSession()
 
     const pathname = request.nextUrl.pathname
@@ -38,33 +36,13 @@ export async function middleware(request: NextRequest) {
         redirectUrl.searchParams.set('redirectTo', pathname)
         return NextResponse.redirect(redirectUrl)
       }
-
-      // セッションエラーがある場合
-      if (sessionError) {
-        console.error('Session error:', sessionError)
-        const redirectUrl = new URL('/auth/login', request.url)
-        redirectUrl.searchParams.set('redirectTo', pathname)
-        return NextResponse.redirect(redirectUrl)
-      }
-
-      // アクセストークンの有効期限をチェック
-      if (session.expires_at) {
-        const expiresAt = new Date(session.expires_at * 1000)
-        const now = new Date()
-        
-        if (expiresAt <= now) {
-          console.warn('Session expired')
-          const redirectUrl = new URL('/auth/login', request.url)
-          redirectUrl.searchParams.set('redirectTo', pathname)
-          return NextResponse.redirect(redirectUrl)
-        }
-      }
     }
 
+    // レスポンスヘッダーにキャッシュ制御を追加
+    res.headers.set('Cache-Control', 'no-store, max-age=0')
     return res
   } catch (error) {
     console.error('Middleware error:', error)
-    // エラーが発生した場合は、安全のためログインページにリダイレクト
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 }
@@ -80,6 +58,6 @@ export const config = {
      * - public (public files)
      * - api (API routes)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api).*)',
   ],
 }

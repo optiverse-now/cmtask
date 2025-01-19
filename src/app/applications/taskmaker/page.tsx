@@ -24,57 +24,30 @@ export default function TaskMakerPage() {
   useEffect(() => {
     let isSubscribed = true;
 
-    const checkAuth = async () => {
+    const checkSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error('セッション取得エラー:', error);
-          if (isSubscribed) {
-            router.replace('/auth/login');
-          }
-          return;
-        }
-
-        if (!session?.user) {
-          if (isSubscribed) {
-            router.replace('/auth/login');
-          }
-          return;
-        }
-
-        // セッションの有効期限をチェック
-        if (session.expires_at) {
-          const expiresAt = new Date(session.expires_at * 1000);
-          const now = new Date();
-          
-          if (expiresAt <= now && isSubscribed) {
-            console.warn('セッションの有効期限が切れています');
-            router.replace('/auth/login');
-            return;
-          }
-        }
-
+        const { data: { session } } = await supabase.auth.getSession();
         if (isSubscribed) {
+          if (!session) {
+            router.replace('/auth/login');
+          }
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('認証チェックエラー:', error);
+        console.error('セッション確認エラー:', error);
         if (isSubscribed) {
-          router.replace('/auth/login');
+          setIsLoading(false);
         }
       }
     };
 
-    checkAuth();
+    checkSession();
 
     const {
       data: { subscription: authListener }
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session || event === 'SIGNED_OUT') {
-        if (isSubscribed) {
-          router.replace('/auth/login');
-        }
+      if (event === 'SIGNED_OUT' || !session) {
+        router.replace('/auth/login');
       }
     });
 
