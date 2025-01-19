@@ -5,6 +5,9 @@ import type { NextRequest } from 'next/server'
 
 // ミドルウェア関数 - すべてのリクエストの前に実行される
 export async function middleware(request: NextRequest) {
+  // デバッグ用：middlewareが実行されているか確認
+  throw new Error(`Middleware executed for path: ${request.nextUrl.pathname}`)
+
   // 次のミドルウェアに渡すレスポンスオブジェクトを作成
   const response = NextResponse.next({
     request: {
@@ -82,9 +85,11 @@ export async function middleware(request: NextRequest) {
 
 // ミドルウェアの設定
 export const config = {
-  // どのパスでミドルウェアを実行するかを指定
   matcher: [
-    '/applications/:path*',  // applicationsディレクトリ配下のすべてのパス
-    '/auth/:path*',         // authディレクトリ配下のすべてのパス
-  ],
+    // 認証が必要なパス
+    '/applications/:path*',
+    '/applications',
+    '/auth/:path*',
+    '/auth',
+  ]
 }
