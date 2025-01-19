@@ -35,13 +35,16 @@ export function UserAccount({ user }: UserAccountProps) {
   
   // ログアウトの処理を追加
   const logOut = async () => {
-    // プロジェクトの状態をクリア
-    clearProjects();
-    // supabaseに用意されているログアウトの関数
-    const { error } = await supabase.auth.signOut()
-    if (error) throw new Error(error.message)
-    // ログアウトを反映させるためにリロードさせる
-    router.push('/auth/login')
+    try {
+      // supabaseに用意されているログアウトの関数
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+
+      // ログアウト後に認証画面に強制的にリダイレクト
+      window.location.href = '/auth/login'
+    } catch (error) {
+      console.error('ログアウトエラー:', error)
+    }
   }
 
 

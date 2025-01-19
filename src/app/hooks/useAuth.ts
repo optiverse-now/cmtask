@@ -53,9 +53,8 @@ export const useAuth = () => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      setError(null);
       const { error: signOutError } = await supabase.auth.signOut();
-
+      
       if (signOutError) {
         throw signOutError;
       }

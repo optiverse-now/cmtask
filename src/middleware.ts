@@ -1,47 +1,38 @@
-import { createClient } from '@/utils/supabase/middleware'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-const protectedPaths = ['/applications']
+// 保護されたルートの定義
+const protectedRoutes = ['/applications/taskmaker']
 
 export async function middleware(request: NextRequest) {
-  try {
-    // 保護されたパスかどうかをチェック
-    const isProtectedPath = protectedPaths.some(path => 
-      request.nextUrl.pathname.startsWith(path)
-    )
-
-    if (!isProtectedPath) {
-      return NextResponse.next()
+  // セッションの確認
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     }
+  )
 
-    // Supabaseクライアントの初期化
-    const supabase = createClient(request)
+  const { data: { session } } = await supabase.auth.getSession()
 
-    // セッションの取得
-    const { data: { session } } = await supabase.auth.getSession()
-
-    // 未認証の場合、ログインページにリダイレクト
-    if (!session) {
-      const redirectUrl = new URL('/auth/login', request.url)
-      redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    return NextResponse.next()
-  } catch (error) {
-    console.error('Middleware error:', error)
-    // エラーが発生した場合もログインページにリダイレクト
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+  // 保護されたルートへのアクセスで未認証の場合
+  if (
+    protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route)) &&
+    !session
+  ) {
+    const redirectUrl = new URL('/auth/login', request.url)
+    return NextResponse.redirect(redirectUrl)
   }
+
+  return NextResponse.next()
 }
 
+// ミドルウェアを適用するパスの設定
 export const config = {
-  matcher: [
-    /*
-     * 認証が必要なパスのマッチパターン
-     * - /applications以下のすべてのパス
-     */
-    '/applications/:path*',
-  ],
+  matcher: ['/applications/:path*']
 }
